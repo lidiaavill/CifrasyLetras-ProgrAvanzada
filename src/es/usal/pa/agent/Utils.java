@@ -27,6 +27,7 @@ public class Utils
     protected static DFAgentDescription [] buscarAgentes(Agent agent, String tipo)
     {
         printf ("Prueba branch develop");
+        printf("Prueba carol");
         //indico las caracter�sticas el tipo de servicio que quiero encontrar
         DFAgentDescription template=new DFAgentDescription();
         ServiceDescription templateSd=new ServiceDescription();
