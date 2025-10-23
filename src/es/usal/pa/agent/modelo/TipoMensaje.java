@@ -7,6 +7,11 @@ package es.usal.pa.agent.modelo;
  * @author Fran
  *
  */
+
+
+/**
+ * Aitor, David y Jugador para identificar mensajes
+ */
 public enum TipoMensaje
 {
 	AITOR_TIEMPO_JUGADORES, AITOR_TURNO_DAVID_JUGADORES, 

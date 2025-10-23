@@ -8,6 +8,12 @@ import java.io.Serializable;
  * @author Fran
  *
  */
+
+/**
+ * David: Trabajar con las operaciones de cada solución
+ * Jugador: Para crear cada operacion de la solución
+ */
+
 public class Operacion implements Serializable
 {
 	/**

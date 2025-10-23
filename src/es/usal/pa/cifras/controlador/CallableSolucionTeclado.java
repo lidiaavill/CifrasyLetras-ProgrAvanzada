@@ -23,6 +23,10 @@ import es.usal.pa.cifras.modelo.Solucion;
  * @author Fran
  *
  */
+
+/**
+ * Jugador: leer por teclado
+ */
 public class CallableSolucionTeclado implements Callable<Solucion>
 {
 	/**

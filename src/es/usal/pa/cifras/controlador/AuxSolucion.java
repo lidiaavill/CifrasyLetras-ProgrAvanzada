@@ -10,6 +10,11 @@ import es.usal.pa.cifras.modelo.Solucion;
  * @author Fran
  *
  */
+
+/**
+ * David: validar soluciones recibidas
+ */
+
 public class AuxSolucion
 {
 	

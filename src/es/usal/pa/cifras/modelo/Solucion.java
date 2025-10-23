@@ -9,6 +9,11 @@ import java.util.List;
  * @author Fran
  *
  */
+
+/**
+ * David: para recibir y comprar soluciones
+ * Jugador: para construir respuesta
+ */
 public class Solucion implements Serializable
 {
 	/**

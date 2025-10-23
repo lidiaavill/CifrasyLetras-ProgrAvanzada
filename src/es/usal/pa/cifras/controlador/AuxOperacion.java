@@ -11,6 +11,10 @@ import es.usal.pa.cifras.modelo.Operacion;
  * @param operacion operación a realizar que contiene los operandos y el operador
  * @return devuelve el resultado. Devolverá null en caso de error y se deberá de interprentar como una operación incorrecta
  */
+
+/**
+ * Jugador: calcular operaciones
+ */
 public class AuxOperacion 
 {
 	private static final Logger LOGGER = LogManager.getLogger();

@@ -13,6 +13,12 @@ import java.util.Random;
  * @author Fran
  *
  */
+
+/**
+ * David: generar números y objetivo
+ */
+
+
 public class AuxProblema
 {
 	protected static List<Integer> posiblesValores=null;
