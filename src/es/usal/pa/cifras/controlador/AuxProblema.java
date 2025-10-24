@@ -50,7 +50,8 @@ public class AuxProblema
 		Random random=new Random();
 		
 		for(int i=0;i<numeros;i++)
-			listaNumeros.add(posiblesValores.get(random.nextInt(0, 99)));
+            // Si quieres índices entre 0 y 99 (100 elementos)
+            listaNumeros.add(posiblesValores.get(random.nextInt(100)));
 		
 		return listaNumeros;
 	}
@@ -64,7 +65,8 @@ public class AuxProblema
 	public static Integer calcularResultado(int min, int maximo)
 	{
 		Random random=new Random();
-		
-		return random.nextInt(min, maximo);
+
+        // Para generar entre min (inclusive) y maximo (inclusive)
+        return random.nextInt(maximo - min + 1) + min;
 	}
 }
