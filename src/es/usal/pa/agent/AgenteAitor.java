@@ -3,12 +3,14 @@ package es.usal.pa.agent;
 import jade.core.Agent;
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import es.usal.pa.agent.modelo.TipoMensaje;
 import es.usal.pa.agent.modelo.VariablesConfiguracion;
 
@@ -53,6 +55,16 @@ public class AgenteAitor extends Agent {
         } else {
             System.out.println("⚠No se han encontrado jugadores conectados");
         }
+        System.out.println();
+
+        //Buscamos al experto David
+        System.out.println("Buscando al experto David...");
+        AID david = obtenerExpertoDavid();
+
+        if(david!=null)
+            System.out.println("Experto david encontrado: " + david.getLocalName());
+        else
+            System.out.print("No se ha encontrado el experto David");
         System.out.println();
 
         //Behaviour de cuenta atrás
@@ -103,6 +115,36 @@ public class AgenteAitor extends Agent {
         return null;
     }
 
+    /*
+     * Busca al agente que proporciona el servicio ExpertoCifras
+     * @return AID del experto david o null si no se encuentra
+     */
+    @SuppressWarnings("removal")
+    private AID obtenerExpertoDavid(){
+        //1.Crear la plantilla de busqueda 
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("ExpertoCifras");
+        template.addServices(sd);
+
+        //2. Restricciones de búsqueda
+        SearchConstraints sc = new SearchConstraints();
+        sc.setMaxResults(new Long(1)); //solo necesitamos 1
+
+        try{
+            //3. Buscamos en DF
+            DFAgentDescription[] results = DFService.search(this, template, sc);
+            //4. Si encontramos resultados, devolver el primero
+            if (results != null && results.length>0)
+                return results[0].getName();
+        } catch (FIPAException e){
+            System.err.println("Error al buscar al experto David en el DF");
+            e.printStackTrace();
+        }
+        //No encontramos a David
+        return null;
+    }
+
 
     /**
      * Envía un mensaje a todos los jugadores conectados
@@ -134,6 +176,53 @@ public class AgenteAitor extends Agent {
 
         // Enviar el mensaje
         send(mensaje);
+    }
+
+    /*
+     * Enviamos el mensaje de turno a David y a todos los jugadores
+     * El mensaje indica que comienza la ronda de cifras
+     */
+    private void enviarMensajeTurno(){
+        System.out.println("═══════════════════════════════════");
+        System.out.println("   Enviando mensaje de TURNO");
+        System.out.println("═══════════════════════════════════");
+        
+        //1. Buscamos a David
+        AID david = obtenerExpertoDavid();
+        if(david==null){
+            System.err.println("No se puede enviar turno, David no encontrado");
+            return;
+        }
+
+        //2. Buscar a los jugadores
+        AID [] jugadores = obtenerJugadores();
+        
+        //3. Creamos el mensaje
+        ACLMessage mensajeTurno = new ACLMessage(ACLMessage.INFORM);
+
+        //4.Añadir a David como receptor
+        mensajeTurno.addReceiver(david);
+        System.out.println("Destinatario: " + david.getLocalName());
+
+        //5. Añadimos a todos los jugadores como receptores
+        if(jugadores != null && jugadores.length > 0){
+            for(AID jugador : jugadores){
+                mensajeTurno.addReceiver(jugador);
+                System.out.println("Destinatario: " + jugador.getLocalName());
+            }
+        }
+        else
+            System.out.println("No hay jugadores conectados");
+
+        //6. Establecer el contenido del mensaje
+        mensajeTurno.setContent(TipoMensaje.AITOR_TURNO_DAVID_JUGADORES.toString());
+        mensajeTurno.setConversationId("Cifras-letras");
+
+        //7. Enviar mensaje
+        send(mensajeTurno);
+
+        System.out.println("✓ Mensaje de turno enviado correctamente");
+        System.out.println("═══════════════════════════════════\n");
     }
 
 
@@ -171,8 +260,8 @@ public class AgenteAitor extends Agent {
                 terminado = true;
                 System.out.println("¡Cuenta atrás finalizada! Turno de David\n");
 
-                // TODO: Aquí enviaremos mensaje a David y Jugadores para iniciar ronda
-                // enviarMensajeTurno();
+                //Aquí enviaremos mensaje a David y Jugadores para iniciar ronda
+                enviarMensajeTurno();
             } else {
                 // 4. Esperar 1 segundo antes de la siguiente iteración
                 block(1000); // Bloquea el behaviour durante 1000 ms (1 segundo)
@@ -197,6 +286,63 @@ public class AgenteAitor extends Agent {
         public int onEnd() {
             System.out.println("Behaviour de cuenta atrás finalizado\n");
             return 0;
+        }
+
+        /*
+         * CLASE INTERNA: Behaviour para esperar ganadores de David
+         */
+        private class ComportamientoEsperaGanadores extends CyclicBehaviour{
+            private boolean ganadorRecibido = false;
+            private long tiempoUltimoMensaje = 0;
+            private static final long TIMEOUT = 2000; //2seg sin mensajes
+
+            public void action(){
+                MessageTemplate template = MessageTemplate.and(
+                                    MessageTemplate.MatchPerformative(ACLMessage.INFORM), 
+                                    MessageTemplate.MatchConversationId("cifras-letras"));
+                
+                ACLMessage mensaje = myAgent.receive(template);
+
+                if(mensaje != null){
+                    String contenido = mensaje.getContent();
+
+                    //Verificar si es un mensaje de ganador
+                    if (contenido.contains(TipoMensaje.DAVID_GANADOR_JUGADORES_AITOR.toString())) {
+                        System.out.println("═══════════════════════════════════");
+                        System.out.println("🏆 AITOR recibió ganador:");
+                        System.out.println("   " + contenido);
+                        System.out.println("═══════════════════════════════════");
+                        
+                        ganadorRecibido = true;
+                        tiempoUltimoMensaje = System.currentTimeMillis();
+                    }
+                } else {
+                    //No hay mensajes
+                    if(ganadorRecibido){
+                        long tiempoTranscurrido = System.currentTimeMillis() - tiempoUltimoMensaje;
+
+                        if(tiempoTranscurrido >= TIMEOUT){
+                            // No hay más ganadores, iniciar nueva ronda
+                            System.out.println("\n" + "─".repeat(45));
+                            System.out.println("✓ Ronda finalizada");
+                            System.out.println("🔄 Iniciando nueva ronda...");
+                            System.out.println("─".repeat(45) + "\n");
+
+                            //Iniciar nueva cuenta atrás
+                            myAgent.addBehaviour(new ComportamientoCuentaAtras());
+
+                            //Terminar behaviour
+                            myAgent.removeBehaviour(this);
+                        }
+                    }
+                    block(500);
+                }       
+            }
+        }
+
+        @Override
+        protected void takeDown(){
+            System.out.println("Agente Aitor finalizando...");
         }
     }
 

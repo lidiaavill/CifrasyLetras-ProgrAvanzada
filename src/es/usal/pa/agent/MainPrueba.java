@@ -62,6 +62,21 @@ public class MainPrueba {
             System.out.println("⏳ Esperando que los jugadores se registren en el DF...\n");
             Thread.sleep(1000);  // 1 segundo
 
+            // Creamos al presentador David
+            System.out.println("📋 Paso 2: Creando EXPERTO DAVID...");
+            System.out.println("────────────────────────────────────────────\n");
+
+            AgentController david = cc.createNewAgent(
+                            "ExpertoDavid", 
+                            "es.usal.pa.agent.AgenteExpertoDavid", 
+                            null);
+            david.start();
+
+            //Esperamos a que David se registre en el DF
+            System.out.println("\n⏳ Esperando que David se registre en el DF...");
+            Thread.sleep(1500);  // 1.5 segundos (más tiempo para David)
+            System.out.println("✅ David registrado\n");
+
             System.out.println("📋 Paso 2: Creando PRESENTADOR (Aitor)...\n");
 
             // 6. Crear el agente Aitor (que buscará a los jugadores)
@@ -72,9 +87,19 @@ public class MainPrueba {
             );
             aitor.start();
 
-            System.out.println("\n✅ Sistema iniciado correctamente");
-            System.out.println("📌 Mira la consola para ver los resultados");
-            System.out.println("📌 Abre la GUI de JADE para ver los agentes\n");
+            //Resumen final
+            System.out.println("\n╔════════════════════════════════════════════╗");
+            System.out.println("║  ✅ Sistema iniciado correctamente         ║");
+            System.out.println("║                                            ║");
+            System.out.println("║  Agentes creados:                          ║");
+            System.out.println("║   • 3 Jugadores (Fran, Maria, Carlos)      ║");
+            System.out.println("║   • 1 Experto (David)                      ║");
+            System.out.println("║   • 1 Presentador (Aitor)                  ║");
+            System.out.println("║                                            ║");
+            System.out.println("║  📌 Mira la consola para ver el juego     ║");
+            System.out.println("║  📌 Abre la GUI de JADE para ver agentes  ║");
+            System.out.println("╚════════════════════════════════════════════╝\n");
+
 
         } catch (StaleProxyException e) {
             System.err.println("❌ Error al crear los agentes:");

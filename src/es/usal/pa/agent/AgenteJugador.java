@@ -93,7 +93,15 @@ public class AgenteJugador extends Agent {
                     String tiempo = partes[1];
                     System.out.println("[" + myAgent.getLocalName() + "] ⏰ Tiempo: " + tiempo);
                 }
+            } else if (contenido.equals(TipoMensaje.AITOR_TURNO_DAVID_JUGADORES.toString())){
+                //Mensaje de inicio de ronda de cifras
+                System.out.println("═══════════════════════════════════");
+                System.out.println("[" + myAgent.getLocalName() + "] 🎮 ¡Comienza la ronda de CIFRAS!");
+                System.out.println("═══════════════════════════════════");
             }
+            else
+                //otro mensaje para debug
+                System.out.println("[" + myAgent.getLocalName() + "] 📨 Mensaje: " + contenido);
             // TODO: Aquí añadiremos más tipos de mensajes después
         }
     }
