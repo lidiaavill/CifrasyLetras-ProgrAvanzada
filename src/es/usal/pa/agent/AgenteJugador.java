@@ -87,17 +87,16 @@ public class AgenteJugador extends Agent {
 
             // El contenido viene en formato: "TIPO_MENSAJE:valor"
             if (contenido.startsWith(TipoMensaje.AITOR_TIEMPO_JUGADORES.toString())) {
+                /*Procesamiento silencioso, Aitor ya muestra la cuenta atrás 
                 // Extraer el tiempo del mensaje
                 String[] partes = contenido.split(":");
                 if (partes.length > 1) {
                     String tiempo = partes[1];
                     System.out.println("[" + myAgent.getLocalName() + "] ⏰ Tiempo: " + tiempo);
-                }
+                }*/
             } else if (contenido.equals(TipoMensaje.AITOR_TURNO_DAVID_JUGADORES.toString())){
                 //Mensaje de inicio de ronda de cifras
-                System.out.println("═══════════════════════════════════");
-                System.out.println("[" + myAgent.getLocalName() + "] 🎮 ¡Comienza la ronda de CIFRAS!");
-                System.out.println("═══════════════════════════════════");
+                System.out.println("   • [" + myAgent.getLocalName() + "] Preparado para jugar cifras");
             } else if (contenido.startsWith(TipoMensaje.DAVID_GANADOR_JUGADORES_AITOR.toString())){
                 // Mensaje de ganador
                 // Formato: DAVID_GANADOR_JUGADORES_AITOR:NombreGanador:Solución

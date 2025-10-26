@@ -63,16 +63,18 @@ public class AgenteAitor extends Agent {
 
         if(david!=null)
             System.out.println("Experto david encontrado: " + david.getLocalName());
-        else
+        else{
             System.out.print("No se ha encontrado el experto David");
+            System.err.println("El juego no puede continuar sin David");
+            doDelete();
+            return;
+        }
         System.out.println();
 
         //Behaviour de cuenta atrás
         System.out.println("Iniciando cuenta atrás...\n");
         addBehaviour(new ComportamientoCuentaAtras());
     }
-
-
 
     /**
      * Busca todos los agentes que proporcionan el servicio "Jugador"
@@ -202,13 +204,11 @@ public class AgenteAitor extends Agent {
 
         //4.Añadir a David como receptor
         mensajeTurno.addReceiver(david);
-        System.out.println("Destinatario: " + david.getLocalName());
 
         //5. Añadimos a todos los jugadores como receptores
         if(jugadores != null && jugadores.length > 0){
             for(AID jugador : jugadores){
                 mensajeTurno.addReceiver(jugador);
-                System.out.println("Destinatario: " + jugador.getLocalName());
             }
         }
         else
@@ -220,9 +220,6 @@ public class AgenteAitor extends Agent {
 
         //7. Enviar mensaje
         send(mensajeTurno);
-
-        System.out.println("✓ Mensaje de turno enviado correctamente");
-        System.out.println("═══════════════════════════════════\n");
     }
 
 
@@ -249,22 +246,41 @@ public class AgenteAitor extends Agent {
         @Override
         public void action() {
             // 1. Enviar mensaje a jugadores con el tiempo actual
-            System.out.println("Aitor dice: " + contador);
+            if (contador == 15) {
+                System.out.println("\n╔════════════════════════════════════╗");
+                System.out.println("║     ⏱️  CUENTA ATRÁS INICIADA     ║");
+                System.out.println("╚════════════════════════════════════╝\n");
+            }
             enviarMensajeJugadores(TipoMensaje.AITOR_TIEMPO_JUGADORES, String.valueOf(contador));
 
-            // 2. Decrementar el contador
+            // 3. Si llegamos a 0, terminamos
+            if (contador > 0) {
+                System.out.print("⏱️  " + String.format("%2d", contador) + " ");
+                if (contador % 5 == 0) {
+                    System.out.println(); // Salto de línea cada 5 números
+                }
+            } else {
+                System.out.println("\n⏱️  0️⃣  ¡TIEMPO!");
+            }
+
             contador--;
 
-            // 3. Si llegamos a 0, terminamos
             if (contador < 0) {
                 terminado = true;
-                System.out.println("¡Cuenta atrás finalizada! Turno de David\n");
+                System.out.println("\n╔════════════════════════════════════╗");
+                System.out.println("║  ✓ Cuenta atrás finalizada        ║");
+                System.out.println("║  🎮 Turno de David - Ronda Cifras ║");
+                System.out.println("╚════════════════════════════════════╝\n");
 
-                //Aquí enviaremos mensaje a David y Jugadores para iniciar ronda
+                // IMPORTANTE: Enviar mensaje de turno
                 enviarMensajeTurno();
+                
+                // CRÍTICO: Añadir behaviour para esperar ganadores
+                myAgent.addBehaviour(new ComportamientoEsperaGanadores());
+                
             } else {
                 // 4. Esperar 1 segundo antes de la siguiente iteración
-                block(1000); // Bloquea el behaviour durante 1000 ms (1 segundo)
+                block(1000);
             }
         }
 
@@ -282,7 +298,6 @@ public class AgenteAitor extends Agent {
          * @return Código de terminación (0 = OK)
          */
         @Override
-
         public int onEnd() {
             System.out.println("Behaviour de cuenta atrás finalizado\n");
             return 0;

@@ -215,11 +215,11 @@ public class AgenteExpertoDavid extends Agent {
                 // Procesar el mensaje
                 String contenido = mensaje.getContent();
                 
-                System.out.println("═══════════════════════════════════");
+                /*System.out.println("═══════════════════════════════════");
                 System.out.println("📨 DAVID ha recibido un mensaje:");
                 System.out.println("   Remitente: " + mensaje.getSender().getLocalName());
                 System.out.println("   Contenido: " + contenido);
-                System.out.println("═══════════════════════════════════");
+                System.out.println("═══════════════════════════════════");*/
                 
                 // Verificar si es un mensaje de turno
                 if (contenido != null && contenido.contains(TipoMensaje.AITOR_TURNO_DAVID_JUGADORES.toString())) {
