@@ -308,11 +308,6 @@ public class AgenteAitor extends Agent {
 
                     //Verificar si es un mensaje de ganador
                     if (contenido.contains(TipoMensaje.DAVID_GANADOR_JUGADORES_AITOR.toString())) {
-                        System.out.println("═══════════════════════════════════");
-                        System.out.println("🏆 AITOR recibió ganador:");
-                        System.out.println("   " + contenido);
-                        System.out.println("═══════════════════════════════════");
-                        
                         ganadorRecibido = true;
                         tiempoUltimoMensaje = System.currentTimeMillis();
                     }
@@ -338,11 +333,6 @@ public class AgenteAitor extends Agent {
                     block(500);
                 }       
             }
-        }
-
-        @Override
-        protected void takeDown(){
-            System.out.println("Agente Aitor finalizando...");
         }
     }
 

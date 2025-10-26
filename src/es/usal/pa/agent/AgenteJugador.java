@@ -98,11 +98,23 @@ public class AgenteJugador extends Agent {
                 System.out.println("═══════════════════════════════════");
                 System.out.println("[" + myAgent.getLocalName() + "] 🎮 ¡Comienza la ronda de CIFRAS!");
                 System.out.println("═══════════════════════════════════");
-            }
-            else
+            } else if (contenido.startsWith(TipoMensaje.DAVID_GANADOR_JUGADORES_AITOR.toString())){
+                // Mensaje de ganador
+                // Formato: DAVID_GANADOR_JUGADORES_AITOR:NombreGanador:Solución
+                String[] partes = contenido.split(":", 3);
+
+                if(partes.length>=3){
+                    String nombreGanador = partes[1];
+                    
+                    //solo imprimir si soy el ganador
+                    if(nombreGanador.equals(myAgent.getLocalName()))
+                        System.out.println("   ✓ [" + myAgent.getLocalName() + "] ¡He ganado esta ronda!");
+                } else if (partes.length>=2 && partes[1].equals("Ninguno"))
+                    System.out.println("[" + myAgent.getLocalName() + "] ⚠ No hubo ganadores en esta ronda"); 
+            } else{
                 //otro mensaje para debug
                 System.out.println("[" + myAgent.getLocalName() + "] 📨 Mensaje: " + contenido);
-            // TODO: Aquí añadiremos más tipos de mensajes después
+            }   
         }
     }
 
