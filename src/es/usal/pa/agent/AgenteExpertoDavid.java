@@ -1,5 +1,6 @@
 package es.usal.pa.agent;
 
+import es.usal.pa.cifras.controlador.AuxSolucion;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -11,6 +12,9 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import es.usal.pa.agent.modelo.TipoMensaje;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Agente Experto David - Versión básica de prueba
  * Solo recibe el mensaje de turno y lo muestra
@@ -18,6 +22,27 @@ import es.usal.pa.agent.modelo.TipoMensaje;
  * @author Lidia
  */
 public class AgenteExpertoDavid extends Agent {
+
+    // ========== VARIABLES DE INSTANCIA ==========
+
+    /**
+    * Lista de 6 números que se usarán en la ronda actual
+     * * Ejemplo: [25, 7, 4, 6, 4, 1]
+            */
+    private List<Integer> numerosRonda;
+
+    /**
+     * Número objetivo que los jugadores deben alcanzar
+     * Ejemplo: 866
+     */
+    private Integer valorBuscado;
+
+    /**
+     * Lista de soluciones recibidas de los jugadores durante la ronda actual
+     * Se limpia al inicio de cada nueva ronda
+     */
+    private List<AuxSolucion> solucionesRecibidas;
+
 
     @Override
     protected void setup() {
@@ -28,7 +53,14 @@ public class AgenteExpertoDavid extends Agent {
         
         System.out.println("Mi nombre es: " + getAID().getName());
         System.out.println();
-        
+
+        // Inicializar variables de instancia
+        numerosRonda = new ArrayList<>();
+        valorBuscado = null;
+        solucionesRecibidas = new ArrayList<>();
+
+
+
         // IMPORTANTE: Registrarse en el DF para que Aitor pueda encontrarnos
         registrarEnDF();
         
