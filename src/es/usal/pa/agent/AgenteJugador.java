@@ -9,6 +9,9 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import es.usal.pa.agent.modelo.TipoMensaje;
 
+import java.util.List;
+import java.util.ArrayList;
+
 /**
  * Agente Jugador - Participante del juego Cifras y Letras
  * Escucha mensajes de Aitor y David
@@ -17,11 +20,16 @@ import es.usal.pa.agent.modelo.TipoMensaje;
  */
 public class AgenteJugador extends Agent {
 
-    @Override
+    // Lista para almacenar los números recibidos de David
+    private List<Integer> numerosRecibidos;
+
     protected void setup() {
         System.out.println("╔═══════════════════════════════════╗");
         System.out.println("║   Jugador " + getLocalName() + " conectado          ║");
         System.out.println("╚═══════════════════════════════════╝");
+
+        // Inicializar lista de números
+        numerosRecibidos = new ArrayList<>();
 
         // Registrarse en el Directory Facilitator (DF) como "Jugador"
         registrarseEnDF();
@@ -97,6 +105,31 @@ public class AgenteJugador extends Agent {
             } else if (contenido.equals(TipoMensaje.AITOR_TURNO_DAVID_JUGADORES.toString())){
                 //Mensaje de inicio de ronda de cifras
                 System.out.println("   • [" + myAgent.getLocalName() + "] Preparado para jugar cifras");
+                //Limpiar numeros de la ronda anterior
+                numerosRecibidos.clear();
+            } else if (contenido.startsWith(TipoMensaje.DAVID_NUMERO_JUGADORES.toString())) {
+                // Mensaje con un número de la ronda
+                String[] partes = contenido.split(":", 2);
+
+                if (partes.length >= 2) {
+                    try {
+                        Integer numero = Integer.parseInt(partes[1]);
+                        numerosRecibidos.add(numero);
+
+                        System.out.println("   📥 [" + myAgent.getLocalName() + "] Número recibido: " + numero +
+                                " (total: " + numerosRecibidos.size() + "/6)");
+
+                        // Si hemos recibido los 6 números, mostrar resumen
+                        if (numerosRecibidos.size() == 6) {
+                            System.out.println("   ✓ [" + myAgent.getLocalName() + "] Todos los números recibidos: " +
+                                    numerosRecibidos);
+                        }
+
+                    } catch (NumberFormatException e) {
+                        System.err.println("   ⚠ [" + myAgent.getLocalName() + "] Error al parsear número: " + partes[1]);
+                    }
+                }
+
             } else if (contenido.startsWith(TipoMensaje.DAVID_GANADOR_JUGADORES_AITOR.toString())){
                 // Mensaje de ganador
                 // Formato: DAVID_GANADOR_JUGADORES_AITOR:NombreGanador:Solución
