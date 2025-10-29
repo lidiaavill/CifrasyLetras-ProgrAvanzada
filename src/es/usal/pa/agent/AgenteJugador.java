@@ -23,6 +23,9 @@ public class AgenteJugador extends Agent {
     // Lista para almacenar los números recibidos de David
     private List<Integer> numerosRecibidos;
 
+    //Valor buscado de la ronda actual
+    private Integer valorBuscado;
+
     protected void setup() {
         System.out.println("╔═══════════════════════════════════╗");
         System.out.println("║   Jugador " + getLocalName() + " conectado          ║");
@@ -30,6 +33,9 @@ public class AgenteJugador extends Agent {
 
         // Inicializar lista de números
         numerosRecibidos = new ArrayList<>();
+
+        //Inicializar valor buscado
+        valorBuscado=null;
 
         // Registrarse en el Directory Facilitator (DF) como "Jugador"
         registrarseEnDF();
@@ -129,6 +135,36 @@ public class AgenteJugador extends Agent {
                         System.err.println("   ⚠ [" + myAgent.getLocalName() + "] Error al parsear número: " + partes[1]);
                     }
                 }
+
+            } else if (contenido.startsWith(TipoMensaje.DAVID_VALOR_BUSCADO_JUGADORES.toString())) {
+                // Mensaje con el valor buscado
+                String[] partes = contenido.split(":", 2);
+
+                if (partes.length >= 2) {
+                    try {
+                        valorBuscado = Integer.parseInt(partes[1]);
+
+                        System.out.println("   🎯 [" + myAgent.getLocalName() + "] Valor buscado recibido: " + valorBuscado);
+
+                    } catch (NumberFormatException e) {
+                        System.err.println("   ⚠ [" + myAgent.getLocalName() + "] Error al parsear valor buscado: " + partes[1]);
+                    }
+                }
+
+            } else if (contenido.equals(TipoMensaje.DAVID_EMPEZAR_CIFRAS_JUGADORES.toString())) {
+                    // Mensaje de inicio de la ronda de cálculo
+                    System.out.println("\n   🚀 [" + myAgent.getLocalName() + "] ¡INICIO! Calculando solución...");
+                    System.out.println("   📋 Números: " + numerosRecibidos);
+                    System.out.println("   🎯 Objetivo: " + valorBuscado);
+                    System.out.println("   ⏱️  Tiempo: 40 segundos\n");
+
+
+            } else if (contenido.equals(TipoMensaje.DAVID_FINALIZAR_CIFRAS_JUGADORES.toString())) {
+                // Mensaje de finalización de la ronda
+                System.out.println("\n   🏁 [" + myAgent.getLocalName() + "] ¡TIEMPO AGOTADO!");
+                System.out.println("   🔒 Ya no se pueden enviar más soluciones");
+                System.out.println("   ⏳ Esperando resultados...\n");
+
 
             } else if (contenido.startsWith(TipoMensaje.DAVID_GANADOR_JUGADORES_AITOR.toString())){
                 // Mensaje de ganador

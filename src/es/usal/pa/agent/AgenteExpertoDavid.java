@@ -10,8 +10,12 @@ import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 import java.util.Arrays;                      // Para Arrays.asList()
 import es.usal.pa.cifras.controlador.AuxProblema;  // Para generar números
+import es.usal.pa.agent.modelo.VariablesConfiguracion;
+import es.usal.pa.cifras.controlador.AuxSolucion;
+import es.usal.pa.cifras.modelo.Solucion;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -201,6 +205,326 @@ public class AgenteExpertoDavid extends Agent {
         System.out.println("✓ Todos los números enviados\n");
     }
 
+    /**
+            * Envía el valor buscado a todos los jugadores.
+            *
+            * @param jugadores Array con los AIDs de todos los jugadores
+ */
+    private void enviarValorBuscado(AID[] jugadores) {
+        System.out.println("🎯 Enviando valor buscado a los jugadores...");
+
+        // Verificar que hay jugadores
+        if (jugadores == null || jugadores.length == 0) {
+            System.out.println("⚠ No hay jugadores conectados, no se envía valor buscado\n");
+            return;
+        }
+
+        // Crear mensaje ACL
+        ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
+
+        // Añadir todos los jugadores como receptores
+        for (AID jugador : jugadores) {
+            mensaje.addReceiver(jugador);
+        }
+
+        // Establecer el contenido: TIPO_MENSAJE:valorBuscado
+        mensaje.setContent(TipoMensaje.DAVID_VALOR_BUSCADO_JUGADORES.toString() + ":" + valorBuscado);
+        mensaje.setConversationId("cifras-letras");
+
+        // Enviar el mensaje
+        send(mensaje);
+
+        System.out.println("   ✓ Valor buscado enviado: " + valorBuscado);
+        System.out.println();
+    }
+
+    /**
+     * Envía el mensaje de inicio de la ronda a todos los jugadores.
+     * Indica que pueden empezar a calcular soluciones.
+     *
+     * @param jugadores Array con los AIDs de todos los jugadores
+     */
+    private void enviarInicio(AID[] jugadores) {
+        System.out.println("🚀 Enviando mensaje de INICIO de ronda...");
+
+        // Verificar que hay jugadores
+        if (jugadores == null || jugadores.length == 0) {
+            System.out.println("⚠ No hay jugadores conectados, no se envía inicio\n");
+            return;
+        }
+
+        // Crear mensaje ACL
+        ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
+
+        // Añadir todos los jugadores como receptores
+        for (AID jugador : jugadores) {
+            mensaje.addReceiver(jugador);
+        }
+
+        // Establecer el contenido: solo el tipo de mensaje (no necesita datos adicionales)
+        mensaje.setContent(TipoMensaje.DAVID_EMPEZAR_CIFRAS_JUGADORES.toString());
+        mensaje.setConversationId("cifras-letras");
+
+        // Enviar el mensaje
+        send(mensaje);
+
+        System.out.println("   ✓ Mensaje de INICIO enviado");
+        System.out.println("   ⏱️  Los jugadores tienen 40 segundos para enviar soluciones\n");
+    }
+
+    /**
+     * Espera el tiempo de la ronda de cifras (40 segundos).
+     * Durante este tiempo, los jugadores calculan y envían sus soluciones.
+     */
+    private void esperarFinRonda() {
+        System.out.println("⏳ Esperando fin de ronda...");
+        System.out.println("   Tiempo de ronda: " + (VariablesConfiguracion.tiempoRondaCifras / 1000) + " segundos");
+
+        try {
+            // Esperar el tiempo configurado (40000ms = 40 segundos)
+            Thread.sleep(VariablesConfiguracion.tiempoRondaCifras);
+
+            System.out.println("\n⏰ ¡Tiempo finalizado!");
+
+        } catch (InterruptedException e) {
+            System.err.println("⚠ Error: La espera fue interrumpida");
+            e.printStackTrace();
+            Thread.currentThread().interrupt(); // Restaurar el estado de interrupción
+        }
+    }
+
+    /**
+     * Envía el mensaje de finalización de la ronda a todos los jugadores.
+     * Indica que el tiempo ha terminado y no se aceptan más soluciones.
+     *
+     * @param jugadores Array con los AIDs de todos los jugadores
+     */
+    private void enviarFinalizacion(AID[] jugadores) {
+        System.out.println("🏁 Enviando mensaje de FINALIZACIÓN...");
+
+        // Verificar que hay jugadores
+        if (jugadores == null || jugadores.length == 0) {
+            System.out.println("⚠ No hay jugadores conectados, no se envía finalización\n");
+            return;
+        }
+
+        // Crear mensaje ACL
+        ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
+
+        // Añadir todos los jugadores como receptores
+        for (AID jugador : jugadores) {
+            mensaje.addReceiver(jugador);
+        }
+
+        // Establecer el contenido: solo el tipo de mensaje
+        mensaje.setContent(TipoMensaje.DAVID_FINALIZAR_CIFRAS_JUGADORES.toString());
+        mensaje.setConversationId("cifras-letras");
+
+        // Enviar el mensaje
+        send(mensaje);
+
+        System.out.println("   ✓ Mensaje de FINALIZACIÓN enviado");
+        System.out.println("   🔒 Ya no se aceptan más soluciones\n");
+    }
+
+    /**
+     * Lee todas las soluciones enviadas por los jugadores durante la ronda.
+     * Procesa la cola de mensajes, valida cada solución y las almacena.
+     *
+     * Solo considera mensajes de tipo JUGADOR_SOLUCION_DAVID.
+     * Los demás mensajes se descartan.
+     */
+    private void leerSoluciones() {
+        System.out.println("📨 Leyendo soluciones de los jugadores...");
+
+        // Limpiar lista de soluciones anteriores
+        solucionesRecibidas.clear();
+
+        ACLMessage mensaje;
+        int mensajesLeidos = 0;
+        int solucionesValidas = 0;
+
+        // Leer todos los mensajes de la cola hasta que no haya más
+        while ((mensaje = receive()) != null) {
+            mensajesLeidos++;
+
+            String contenido = mensaje.getContent();
+
+            // Verificar que es un mensaje de solución
+            if (contenido != null && contenido.startsWith(TipoMensaje.JUGADOR_SOLUCION_DAVID.toString())) {
+
+                // Extraer nombre del jugador (del sender)
+                String nombreJugador = mensaje.getSender().getLocalName();
+
+                System.out.println("   📥 Procesando solución de: " + nombreJugador);
+
+                try {
+                    // Deserializar la solución del contenido del mensaje
+                    Object obj = mensaje.getContentObject();
+
+                    if (obj instanceof Solucion) {
+                        Solucion solucion = (Solucion) obj;
+
+                        // Validar la solución con AuxSolucion
+                        Integer resultadoObtenido = AuxSolucion.calcularSolucion(
+                                solucion,
+                                numerosRonda,
+                                valorBuscado
+                        );
+
+                        if (resultadoObtenido != null) {
+                            // Solución válida
+                            SolucionJugador solucionJugador = new SolucionJugador(
+                                    nombreJugador,
+                                    solucion,
+                                    resultadoObtenido
+                            );
+
+                            solucionesRecibidas.add(solucionJugador);
+                            solucionesValidas++;
+
+                            int distancia = Math.abs(valorBuscado - resultadoObtenido);
+                            System.out.println("      ✓ Válida - Resultado: " + resultadoObtenido +
+                                    " (distancia: " + distancia + ")");
+
+                        } else {
+                            // Solución inválida
+                            System.out.println("      ❌ Inválida - Operaciones incorrectas");
+                        }
+
+                    } else {
+                        System.out.println("      ⚠ Error: El objeto no es una Solución");
+                    }
+
+                } catch (UnreadableException e) {
+                    System.err.println("      ❌ Error al deserializar solución: " + e.getMessage());
+                }
+
+            } else {
+                // Mensaje que no es de solución, lo ignoramos y descartamos
+                System.out.println("   🗑️  Mensaje ignorado (no es solución): " +
+                        (contenido != null ? contenido.substring(0, Math.min(30, contenido.length())) : "null"));
+            }
+        }
+
+        System.out.println();
+        System.out.println("   📊 Resumen:");
+        System.out.println("      - Mensajes leídos: " + mensajesLeidos);
+        System.out.println("      - Soluciones válidas: " + solucionesValidas);
+        System.out.println("      - Soluciones inválidas: " + (mensajesLeidos - solucionesValidas));
+        System.out.println();
+    }
+
+
+    /**
+     * Calcula los ganadores de la ronda.
+     * Encuentra el/los jugador(es) con el resultado más cercano al valor buscado.
+     *
+     * @return Lista con los ganadores (puede haber empates)
+     */
+    private List<SolucionJugador> calcularGanadores() {
+        System.out.println("🏆 Calculando ganadores...");
+
+        List<SolucionJugador> ganadores = new ArrayList<>();
+
+        // Si no hay soluciones válidas, no hay ganadores
+        if (solucionesRecibidas == null || solucionesRecibidas.isEmpty()) {
+            System.out.println("   ⚠ No hay soluciones válidas, no hay ganadores\n");
+            return ganadores;
+        }
+
+        // Encontrar la distancia mínima al valor buscado
+        int distanciaMinima = Integer.MAX_VALUE;
+
+        for (SolucionJugador solucion : solucionesRecibidas) {
+            int distancia = solucion.calcularDistancia(valorBuscado);
+
+            if (distancia < distanciaMinima) {
+                distanciaMinima = distancia;
+            }
+        }
+
+        System.out.println("   📏 Distancia mínima encontrada: " + distanciaMinima);
+
+        // Encontrar todos los jugadores con esa distancia mínima (pueden haber empates)
+        for (SolucionJugador solucion : solucionesRecibidas) {
+            int distancia = solucion.calcularDistancia(valorBuscado);
+
+            if (distancia == distanciaMinima) {
+                ganadores.add(solucion);
+                System.out.println("   🏆 Ganador: " + solucion.getNombreJugador() +
+                        " → Resultado: " + solucion.getResultadoObtenido() +
+                        " (distancia: " + distancia + ")");
+            }
+        }
+
+        System.out.println();
+
+        if (ganadores.size() > 1) {
+            System.out.println("   ⚖️  ¡EMPATE! " + ganadores.size() + " jugadores con la misma distancia");
+        }
+
+        System.out.println();
+        return ganadores;
+    }
+
+    /**
+     * Envía los mensajes con los ganadores de la ronda a todos los jugadores y a Aitor.
+     *
+     * Si no hay ganadores, envía un mensaje indicándolo.
+     * Si hay ganadores (puede haber empates), envía un mensaje por cada uno.
+     *
+     * @param ganadores Lista con los ganadores de la ronda
+     */
+    private void enviarGanadores(List<SolucionJugador> ganadores) {
+        System.out.println("📢 Enviando mensajes de ganadores...");
+
+        // Obtener Aitor y jugadores del DF
+        AID aitor = obtenerAitor();
+        AID[] jugadores = obtenerJugadores();
+
+        // Verificar si hay ganadores
+        if (ganadores == null || ganadores.isEmpty()) {
+            // No hay ganadores
+            System.out.println("   ℹ️  No hay ganadores en esta ronda");
+            enviarMensajeSinGanadores(aitor, jugadores);
+
+        } else {
+            // Hay uno o más ganadores
+            System.out.println("   🏆 Enviando " + ganadores.size() + " ganador(es):");
+
+            for (SolucionJugador ganador : ganadores) {
+                // Convertir la solución a string legible
+                String solucionTexto = AuxSolucion.cadenaOperaciones(ganador.getSolucion())
+                        .replace("\n", ", ")
+                        .trim();
+
+                // Si el texto es muy largo, truncar
+                if (solucionTexto.length() > 100) {
+                    solucionTexto = solucionTexto.substring(0, 97) + "...";
+                }
+
+                // Añadir el resultado final
+                solucionTexto += " → " + ganador.getResultadoObtenido();
+
+                System.out.println("      • " + ganador.getNombreJugador() +
+                        " (resultado: " + ganador.getResultadoObtenido() + ")");
+
+                // Crear AID del ganador
+                AID aidGanador = new AID(ganador.getNombreJugador(), AID.ISLOCALNAME);
+
+                // Enviar mensaje
+                enviarMensajeGanador(aidGanador, solucionTexto, aitor, jugadores);
+            }
+
+            if (ganadores.size() > 1) {
+                System.out.println("      ⚖️  Hubo empate entre " + ganadores.size() + " jugadores");
+            }
+        }
+
+        System.out.println("✓ Mensajes de ganadores enviados\n");
+    }
+
     // ========== MÉTODOS DE GENERACIÓN DE PROBLEMA ==========
 
     /**
@@ -259,36 +583,39 @@ public class AgenteExpertoDavid extends Agent {
         System.out.println("🎲 DAVID procesando ronda...");
         System.out.println("═══════════════════════════════════");
 
+        //1. Generar nuevo problema
         generarProblema();
 
+        //2. Obtener jugadores y Aitor
         AID [] jugadores = obtenerJugadores();
         AID aitor = obtenerAitor();
+
+        //3. Enviar nº a los jugadores
         enviarNumeros (jugadores);
-        // Simular que la ronda tarda 3 segundos
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
-        System.out.println("✓ Ronda procesada");
-        System.out.println("📊 Determinando ganadores...\n");
+        //4. Enviar valor buscado
+        enviarValorBuscado(jugadores);
+
+        //5. Enviar msg de inicio
+        enviarInicio(jugadores);
+
+        //6. Esperar 40s - tiempo de ronda (AHORA PUESTO 5s PARA DEPURAR)
+        esperarFinRonda();
+
+        //7. Enviar msg de finalización
+        enviarFinalizacion(jugadores);
+
+        //8. Leer Soluciones de la cola
+        leerSoluciones();
+
+        //9. Calcular ganadores
+        List<SolucionJugador> ganadores = calcularGanadores();  //
+
+        //10. Enviar ganadores
+        System.out.println("✓ Ronda procesada\n");
+        enviarGanadores(ganadores);
 
 
-        if (jugadores == null || jugadores.length == 0) {
-            System.out.println("⚠ No hay jugadores, enviando mensaje sin ganadores");
-            enviarMensajeSinGanadores(aitor, jugadores);
-            return;
-        }
-
-        // SIMULACIÓN: El primer jugador gana (en la implementación real,
-        // aquí analizarías las soluciones recibidas)
-        AID ganador = jugadores[0];
-        String solucionGanadora = "25+6=31, 7*4=28, 28*31=868, 868-1=867";
-
-        enviarMensajeGanador(ganador, solucionGanadora, aitor, jugadores);
-
-        System.out.println("✓ Mensaje de ganador enviado\n");
     }
 
     /*
@@ -372,16 +699,14 @@ public class AgenteExpertoDavid extends Agent {
                 // Hay mensaje, procesarlo
                 String contenido = mensaje.getContent();
 
-                System.out.println("📨 David recibió mensaje: " + contenido);
 
                 // Verificar si es el mensaje de turno de Aitor
                 if (contenido != null && contenido.equals(TipoMensaje.AITOR_TURNO_DAVID_JUGADORES.toString())) {
                     System.out.println("✓ ¡Es mi turno! Comenzando ronda de cifras\n");
                     turnoRecibido = true;
 
-                    // TODO: Aquí se procesará la ronda completa (siguiente paso)
-                    // Por ahora solo simulamos
                     procesarRondaYEnviarGanadores();
+
                 } else {
                     // Mensaje que no es de turno, lo ignoramos
                     System.out.println("⚠ Mensaje ignorado (no es de turno)");

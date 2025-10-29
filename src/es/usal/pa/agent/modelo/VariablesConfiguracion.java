@@ -21,7 +21,11 @@ public class VariablesConfiguracion
 	/**
 	 * Tiempo ronda de cifras
 	 */
-	public static final long tiempoRondaCifras=40000;
+	//public static final long tiempoRondaCifras=40000;
+
+    //He puesto 5000 para depurar y no estar esperando 40s, CAMBIAR LUEGO A LO DE ARRIBA
+    public static final long tiempoRondaCifras=5000;
+
 
     /*
     Igual hay que poner estas aquí --> Lidia
