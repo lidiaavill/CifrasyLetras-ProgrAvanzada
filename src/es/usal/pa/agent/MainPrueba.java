@@ -44,7 +44,7 @@ public class MainPrueba {
             );
             jugador1.start();
 
-            AgentController jugador2 = cc.createNewAgent(
+           AgentController jugador2 = cc.createNewAgent(
                     "Maria",
                     "es.usal.pa.agent.AgenteJugador",
                     null
@@ -57,6 +57,7 @@ public class MainPrueba {
                     null
             );
             jugador3.start();
+
 
             // 5. IMPORTANTE: Esperar un poco para que los jugadores se registren en el DF
             System.out.println("⏳ Esperando que los jugadores se registren en el DF...\n");

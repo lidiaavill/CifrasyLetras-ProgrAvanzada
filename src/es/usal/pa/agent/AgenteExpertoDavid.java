@@ -53,7 +53,7 @@ public class AgenteExpertoDavid extends Agent {
     /**
      * Modo de depuración: si true, usa valores fijos; si false, genera aleatorios
      */
-    private boolean modoDepuracion = true;  // ⭐ Cambiar a false para aleatorios
+    private boolean modoDepuracion = false;  // ⭐ Cambiar a false para aleatorios
 
     @Override
     protected void setup() {

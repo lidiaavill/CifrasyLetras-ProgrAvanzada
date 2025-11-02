@@ -20,14 +20,18 @@ import java.util.ArrayList;
  * Agente Jugador - Participante del juego Cifras y Letras
  * Escucha mensajes de Aitor y David
  *
+ * VERSIÓN REFACTORIZADA con métodos auxiliares de verificación
+ *
  * @author Lidia
  */
 public class AgenteJugador extends Agent {
 
+    // ========== VARIABLES DE INSTANCIA ==========
+
     // Lista para almacenar los números recibidos de David
     private List<Integer> numerosRecibidos;
 
-    //Valor buscado de la ronda actual
+    // Valor buscado de la ronda actual
     private Integer valorBuscado;
 
     /**
@@ -46,6 +50,9 @@ public class AgenteJugador extends Agent {
         RECIBIENDO_GANADORES        // Recibiendo ganadores
     }
 
+    // ========== MÉTODO SETUP ==========
+
+    @Override
     protected void setup() {
         System.out.println("╔═══════════════════════════════════╗");
         System.out.println("║   Jugador " + getLocalName() + " conectado          ║");
@@ -54,8 +61,8 @@ public class AgenteJugador extends Agent {
         // Inicializar lista de números
         numerosRecibidos = new ArrayList<>();
 
-        //Inicializar valor buscado
-        valorBuscado=null;
+        // Inicializar valor buscado
+        valorBuscado = null;
 
         // Registrarse en el Directory Facilitator (DF) como "Jugador"
         registrarseEnDF();
@@ -65,6 +72,8 @@ public class AgenteJugador extends Agent {
         // Añadir behaviour para recibir mensajes
         addBehaviour(new ComportamientoRecibirMensajes());
     }
+
+    // ========== MÉTODO DE REGISTRO EN DF ==========
 
     /**
      * Registra este agente en el DF con el servicio tipo "Jugador"
@@ -91,7 +100,9 @@ public class AgenteJugador extends Agent {
         }
     }
 
-    /*
+    // ========== MÉTODO PARA OBTENER A DAVID ==========
+
+    /**
      * Buscamos al experto David en el DF
      * @return AID de David
      */
@@ -100,7 +111,7 @@ public class AgenteJugador extends Agent {
         ServiceDescription sd = new ServiceDescription();
         sd.setType("ExpertoCifras");
         template.addServices(sd);
-        
+
         try {
             DFAgentDescription[] results = DFService.search(this, template);
             if (results != null && results.length > 0) {
@@ -109,11 +120,12 @@ public class AgenteJugador extends Agent {
         } catch (FIPAException e) {
             e.printStackTrace();
         }
-        
+
         // Si no se encuentra, usar nombre directo
         return new AID("ExpertoDavid", AID.ISLOCALNAME);
     }
 
+    // ========== CLASE INTERNA: BEHAVIOUR ==========
 
     /**
      * CLASE INTERNA: Behaviour para recibir mensajes
@@ -123,7 +135,7 @@ public class AgenteJugador extends Agent {
      */
     private class ComportamientoRecibirMensajes extends CyclicBehaviour {
 
-        //Variable de estado, empieza esperando cuenta atrás
+        // Variable de estado, empieza esperando cuenta atrás
         private EstadoJugador estado = EstadoJugador.ESPERANDO_CUENTA_ATRAS;
 
         @Override
@@ -133,12 +145,10 @@ public class AgenteJugador extends Agent {
 
             if (mensaje != null) {
                 // Hay mensaje, procesarlo
-                String contenido = mensaje.getContent();
 
-                //Mostramos el estado actual
-                String tipoMensaje = contenido.split(":")[0];
-                System.out.println("[DEBUG " + myAgent.getLocalName() + "] Estado: " + estado + 
-                                 " | Recibe: " + tipoMensaje);
+                // OPCIONAL: Para depuración detallada, descomentar la siguiente línea
+                // debugMensaje(mensaje);
+
                 procesarMensaje(mensaje);
             } else {
                 // No hay mensaje, bloquear hasta que llegue uno
@@ -146,201 +156,259 @@ public class AgenteJugador extends Agent {
             }
         }
 
+        // ========== MÉTODO PRINCIPAL DE PROCESAMIENTO ==========
+
         /**
          * Procesa el mensaje recibido según su tipo
+         * Versión REFACTORIZADA usando métodos auxiliares
          */
         private void procesarMensaje(ACLMessage mensaje) {
-            String contenido = mensaje.getContent();
+            // Verificar que el mensaje es válido
+            if (mensaje == null) {
+                return;
+            }
 
-            switch(estado){
+            // Procesar según el estado actual
+            switch(estado) {
                 case ESPERANDO_CUENTA_ATRAS:
-                    procesarEstadoEsperandoCuentaAtras(contenido);
+                    procesarEstadoEsperandoCuentaAtras(mensaje);
                     break;
                 case EN_CUENTA_ATRAS:
-                    procesarEstadoEnCuentaAtras(contenido);
+                    procesarEstadoEnCuentaAtras(mensaje);
                     break;
                 case ESPERANDO_TURNO_CIFRAS:
-                    procesarEstadoEsperandoTurno(contenido);
+                    procesarEstadoEsperandoTurno(mensaje);
                     break;
                 case RECIBIENDO_NUMEROS:
-                    procesarEstadoRecibiendoNumeros(contenido);
+                    procesarEstadoRecibiendoNumeros(mensaje);
                     break;
                 case ESPERANDO_VALOR_BUSCADO:
-                    procesarEstadoEsperandoValorBuscado(contenido);
+                    procesarEstadoEsperandoValorBuscado(mensaje);
                     break;
                 case ESPERANDO_INICIO:
-                    procesarEstadoEsperandoInicio(contenido);
+                    procesarEstadoEsperandoInicio(mensaje);
                     break;
                 case JUGANDO:
-                    procesarEstadoJugando(contenido);
+                    procesarEstadoJugando(mensaje);
                     break;
                 case ESPERANDO_FIN:
-                    procesarEstadoEsperandoFin(contenido);
+                    procesarEstadoEsperandoFin(mensaje);
                     break;
                 case RECIBIENDO_GANADORES:
-                    procesarEstadoRecibiendoGanadores(contenido);
+                    procesarEstadoRecibiendoGanadores(mensaje);
                     break;
             }
         }
 
-        //Metodos para cada estado
-        // El contenido viene en formato: "TIPO_MENSAJE:valor"
+        // ========== MÉTODOS DE PROCESAMIENTO POR ESTADO ==========
 
-        //Estado 1: Ignora todo hasta recibir mensaje de cuenta atras
-        private void procesarEstadoEsperandoCuentaAtras(String contenido){
-            if(contenido.startsWith(TipoMensaje.AITOR_TIEMPO_JUGADORES.toString())){
+        /**
+         * Estado 1: Ignora todo hasta recibir mensaje de cuenta atrás
+         */
+        private void procesarEstadoEsperandoCuentaAtras(ACLMessage mensaje) {
+            if (esMensajeTiempo(mensaje)) {
                 System.out.println("   → [" + myAgent.getLocalName() + "] ¡Nueva ronda detectada!");
                 estado = EstadoJugador.EN_CUENTA_ATRAS;
+                procesarEstadoEnCuentaAtras(mensaje); // Procesar este mismo mensaje
             }
-            //Ignorar cualquier otro mensaje
+            // Ignorar cualquier otro mensaje
         }
 
-        //Estado 2: Recibiendo cuenta atras
-        private void procesarEstadoEnCuentaAtras(String contenido){
-            if(contenido.startsWith(TipoMensaje.AITOR_TIEMPO_JUGADORES.toString())){
-                //Procesamiento silencioso, Aitor ya lo muestra
-            } else if (contenido.equals(TipoMensaje.AITOR_TURNO_DAVID_JUGADORES.toString())){
+        /**
+         * Estado 2: Recibiendo cuenta atrás
+         */
+        private void procesarEstadoEnCuentaAtras(ACLMessage mensaje) {
+            if (esMensajeTiempo(mensaje)) {
+                // Procesamiento silencioso, Aitor ya lo muestra
+                // Opcional: mostrar solo valores específicos
+                Integer tiempo = extraerValorNumerico(mensaje);
+                if (tiempo != null && tiempo <= 5) {
+                    System.out.println("   ⏱️ [" + myAgent.getLocalName() + "] " + tiempo + "...");
+                }
+
+            } else if (esMensajeTurnoDavid(mensaje)) {
                 System.out.println("   • [" + myAgent.getLocalName() + "] Preparado para jugar cifras");
                 numerosRecibidos.clear();
+                valorBuscado = null;
                 estado = EstadoJugador.ESPERANDO_TURNO_CIFRAS;
             }
         }
 
-        //Estado 3: Esperar confirmacion de turno
-        private void procesarEstadoEsperandoTurno(String contenido){
-            if(contenido.startsWith((TipoMensaje.DAVID_NUMERO_JUGADORES.toString()))){
+        /**
+         * Estado 3: Esperar confirmación de turno
+         */
+        private void procesarEstadoEsperandoTurno(ACLMessage mensaje) {
+            if (esMensajeNumero(mensaje)) {
                 estado = EstadoJugador.RECIBIENDO_NUMEROS;
                 System.out.println("   → [" + myAgent.getLocalName() + "] Recibiendo números...");
-                procesarEstadoRecibiendoNumeros(contenido);
+                procesarEstadoRecibiendoNumeros(mensaje); // Procesar este número
             }
         }
 
-        //Estado 4: Recibiendo los 6 numeros
-        private void procesarEstadoRecibiendoNumeros(String contenido){
-            if(contenido.startsWith(TipoMensaje.DAVID_NUMERO_JUGADORES.toString())){
-                String[] partes = contenido.split(":",2);
-                if(partes.length>=2){
-                    try{
-                        Integer numero = Integer.parseInt(partes[1]);
-                        numerosRecibidos.add(numero);
-                        System.out.println("   📥 [" + myAgent.getLocalName() + "] Número " + 
-                                         numerosRecibidos.size() + "/6: " + numero);
+        /**
+         * Estado 4: Recibiendo los 6 números
+         */
+        private void procesarEstadoRecibiendoNumeros(ACLMessage mensaje) {
+            if (esMensajeNumero(mensaje)) {
+                Integer numero = extraerValorNumerico(mensaje);
 
-                        if(numerosRecibidos.size() == 6){
-                            System.out.println("   ✓ [" + myAgent.getLocalName() + "] Números completos: " + numerosRecibidos);
-                            estado = EstadoJugador.ESPERANDO_VALOR_BUSCADO;
-                        } 
-                    }catch (NumberFormatException e){
-                            System.err.println("   ⚠ Error al parsear número");
+                if (numero != null) {
+                    numerosRecibidos.add(numero);
+                    System.out.println("   📥 [" + myAgent.getLocalName() + "] Número " +
+                            numerosRecibidos.size() + "/6: " + numero);
+
+                    if (numerosRecibidos.size() == 6) {
+                        System.out.println("   ✓ [" + myAgent.getLocalName() + "] Números completos: " +
+                                numerosRecibidos);
+                        estado = EstadoJugador.ESPERANDO_VALOR_BUSCADO;
                     }
+                } else {
+                    System.err.println("   ⚠ [" + myAgent.getLocalName() + "] Error al parsear número");
                 }
             }
         }
-        
-        //Estado 5: Esperando el valor buscado
-        private void procesarEstadoEsperandoValorBuscado(String contenido){
-            if(contenido.startsWith(TipoMensaje.DAVID_VALOR_BUSCADO_JUGADORES.toString())){
-                String[] partes = contenido.split(":",2);
-                if(partes.length>=2){
-                    try{
-                        valorBuscado = Integer.parseInt(partes[1]);
-                        System.out.println("   🎯 [" + myAgent.getLocalName() + "] Objetivo: " + valorBuscado);
-                        estado = EstadoJugador.ESPERANDO_INICIO;
-                    } catch (NumberFormatException e){
-                        System.err.println("   ⚠ Error al parsear valor buscado");
-                    }
+
+        /**
+         * Estado 5: Esperando el valor buscado
+         */
+        private void procesarEstadoEsperandoValorBuscado(ACLMessage mensaje) {
+            if (esMensajeValorBuscado(mensaje)) {
+                valorBuscado = extraerValorNumerico(mensaje);
+
+                if (valorBuscado != null) {
+                    System.out.println("   🎯 [" + myAgent.getLocalName() + "] Objetivo: " + valorBuscado);
+                    estado = EstadoJugador.ESPERANDO_INICIO;
+                } else {
+                    System.err.println("   ⚠ [" + myAgent.getLocalName() +
+                            "] Error al parsear valor buscado");
                 }
             }
         }
-        
-        //ESTADO 6: Esperando mensaje de inicio de ronda
-        private void procesarEstadoEsperandoInicio(String contenido){
-            if(contenido.equals(TipoMensaje.DAVID_EMPEZAR_CIFRAS_JUGADORES.toString())){
+
+        /**
+         * Estado 6: Esperando mensaje de inicio de ronda
+         */
+        private void procesarEstadoEsperandoInicio(ACLMessage mensaje) {
+            if (esMensajeEmpezar(mensaje)) {
                 System.out.println("\n   🚀 [" + myAgent.getLocalName() + "] ¡EMPIEZA LA RONDA!");
                 System.out.println("   📋 Números: " + numerosRecibidos);
                 System.out.println("   🎯 Objetivo: " + valorBuscado + "\n");
+
                 estado = EstadoJugador.JUGANDO;
-            
                 generarYEnviarSolucion();
             }
         }
 
-        //Estado 7: Jugando (generando solucion)
-        //Aqui va la logica de calculo
-        private void procesarEstadoJugando(String contenido){
-            if(contenido.equals(TipoMensaje.DAVID_FINALIZAR_CIFRAS_JUGADORES.toString())){
-                System.out.println("   🏁 [" + myAgent.getLocalName() + "] Ronda finalizada (aún no enviamos solución)");
+        /**
+         * Estado 7: Jugando (generando solución)
+         */
+        private void procesarEstadoJugando(ACLMessage mensaje) {
+            if (esMensajeFinalizar(mensaje)) {
+                System.out.println("   🏁 [" + myAgent.getLocalName() + "] Ronda finalizada");
                 estado = EstadoJugador.ESPERANDO_FIN;
             }
         }
 
-        //Estado 8: Esperando mensaje fin
-        private void procesarEstadoEsperandoFin(String contenido){
-            if(contenido.startsWith(TipoMensaje.DAVID_GANADOR_JUGADORES_AITOR.toString())){
+        /**
+         * Estado 8: Esperando mensaje fin
+         */
+        private void procesarEstadoEsperandoFin(ACLMessage mensaje) {
+            if (esMensajeGanador(mensaje)) {
                 estado = EstadoJugador.RECIBIENDO_GANADORES;
-                procesarEstadoRecibiendoGanadores(contenido);
+                procesarEstadoRecibiendoGanadores(mensaje); // Procesar este mismo mensaje
             }
         }
 
-        //Estado 9: Recibiendo ganadores
-        private void procesarEstadoRecibiendoGanadores(String contenido){
-            if(contenido.startsWith(TipoMensaje.AITOR_TIEMPO_JUGADORES.toString())){
+        /**
+         * Estado 9: Recibiendo ganadores
+         */
+        private void procesarEstadoRecibiendoGanadores(ACLMessage mensaje) {
+            if (esMensajeTiempo(mensaje)) {
                 System.out.println("\n   🔄 [" + myAgent.getLocalName() + "] Reiniciando para nueva ronda\n");
+                limpiarColaMensajes();
                 estado = EstadoJugador.EN_CUENTA_ATRAS;
-            } else if (contenido.startsWith(TipoMensaje.DAVID_GANADOR_JUGADORES_AITOR.toString())){
-                String[] partes = contenido.split(":",3);
-                if(partes.length>=3){
-                    String nombreGanador = partes[1];
-                    if(nombreGanador.equals(myAgent.getLocalName()))
-                        System.out.println("   ✓ [" + myAgent.getLocalName() + "] ¡He ganado esta ronda!");
-                    else if (partes.length>=2 && partes[1].equals("Ninguno"))
+                procesarEstadoEnCuentaAtras(mensaje); // Procesar este mensaje de tiempo
+
+            } else if (esMensajeGanador(mensaje)) {
+                String nombreGanador = extraerNombreGanador(mensaje);
+                String solucion = extraerSolucionGanador(mensaje);
+
+                if (nombreGanador != null) {
+                    if (nombreGanador.equals(myAgent.getLocalName())) {
+                        System.out.println("\n╔═══════════════════════════════════════════╗");
+                        System.out.println("║   🏆 ¡HE GANADO ESTA RONDA! 🏆           ║");
+                        System.out.println("╚═══════════════════════════════════════════╝");
+                        System.out.println("   Solución: " + (solucion != null ? solucion : "N/A"));
+                        System.out.println();
+
+                    } else if (nombreGanador.equals("Ninguno")) {
                         System.out.println("   • [" + myAgent.getLocalName() + "] Sin ganadores esta ronda");
+
+                    } else {
+                        System.out.println("   🏆 [" + myAgent.getLocalName() + "] Ganador: " + nombreGanador);
+                        if (solucion != null) {
+                            System.out.println("      Solución: " + solucion);
+                        }
+                    }
                 }
             }
         }
 
-        //Metodo para limpiar la cola
-        private void limpiarColaMensajes(){
+        // ========== MÉTODOS AUXILIARES DE LIMPIEZA Y SOLUCIÓN ==========
+
+        /**
+         * Método para limpiar la cola de mensajes
+         */
+        private void limpiarColaMensajes() {
             int mensajesBorrados = 0;
             ACLMessage msg;
 
-            //leer todos los mensajes sin bloquear hasta que no haya mas
-            while((msg = myAgent.receive()) != null)
+            // Leer todos los mensajes sin bloquear hasta que no haya más
+            while ((msg = myAgent.receive()) != null) {
                 mensajesBorrados++;
-            if(mensajesBorrados>0)
-                System.out.println("   🗑️  [" + myAgent.getLocalName() + "] " + 
-                                 mensajesBorrados + " mensaje(s) borrado(s) de la cola");
+            }
+
+            if (mensajesBorrados > 0) {
+                System.out.println("   🗑️  [" + myAgent.getLocalName() + "] " +
+                        mensajesBorrados + " mensaje(s) borrado(s) de la cola");
+            }
         }
 
-        //Metodo para generar y enviar solucion
-        //Por ahora se hace manual, pero hay que implementar el algoritmo de busqueda real
-        private void generarYEnviarSolucion(){
+        /**
+         * Método para generar y enviar solución
+         * Por ahora usa solución ficticia del ejemplo del enunciado
+         * TODO: Implementar algoritmo de búsqueda automática
+         */
+        private void generarYEnviarSolucion() {
             System.out.println("   💡 [" + myAgent.getLocalName() + "] Generando solución...");
 
-            //Creamos solucion ficticia:
-            //ejemplo del enunciado: 25+6=31, 7*4=28, 28*31=868, 868-1=867
+            // Creamos solución ficticia:
+            // Ejemplo del enunciado: 25+6=31, 7*4=28, 28*31=868, 868-1=867
             Solucion solucion = new Solucion();
 
-            //25+6=31
-            solucion.addOpereacion(new Operacion(25, 6,'+'));
+            // Operación 1: 25+6=31
+            solucion.addOpereacion(new Operacion(25, 6, '+'));
+
             // Operación 2: 7*4=28
             solucion.addOpereacion(new Operacion(7, 4, '*'));
-            
+
             // Operación 3: 28*31=868
             solucion.addOpereacion(new Operacion(28, 31, '*'));
-            
+
             // Operación 4: 868-1=867
             solucion.addOpereacion(new Operacion(868, 1, '-'));
-            
+
             System.out.println("   ✓ Solución generada: 25+6=31, 7*4=28, 28*31=868, 868-1=867");
-            
+
             // Enviar solución a David
             enviarSolucion(solucion);
         }
 
-        //Enviar solucion a David mediante mensaje ACL
-        private void enviarSolucion(Solucion solucion){
-            try{
+        /**
+         * Enviar solución a David mediante mensaje ACL
+         */
+        private void enviarSolucion(Solucion solucion) {
+            try {
                 AID david = obtenerExpertoDavid();
 
                 ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
@@ -351,13 +419,238 @@ public class AgenteJugador extends Agent {
                 myAgent.send(mensaje);
 
                 System.out.println("   📤 [" + myAgent.getLocalName() + "] Solución enviada a David\n");
-            }catch(IOException e){
+            } catch(IOException e) {
                 System.err.println("   ❌ Error al enviar solución: " + e.getMessage());
                 e.printStackTrace();
             }
         }
-                
-    }
+
+        // ========== MÉTODOS AUXILIARES DE VERIFICACIÓN DE MENSAJES ==========
+
+        /**
+         * Verifica si el mensaje es de tipo AITOR_TIEMPO_JUGADORES (cuenta atrás)
+         *
+         * @param msg Mensaje ACL a verificar
+         * @return true si es un mensaje de tiempo, false en caso contrario
+         */
+        private boolean esMensajeTiempo(ACLMessage msg) {
+            if (msg == null || msg.getContent() == null) {
+                return false;
+            }
+
+            String contenido = msg.getContent();
+            return contenido.startsWith(TipoMensaje.AITOR_TIEMPO_JUGADORES.toString());
+        }
+
+        /**
+         * Verifica si el mensaje es de tipo AITOR_TURNO_DAVID_JUGADORES
+         * Indica que comienza la ronda de cifras
+         *
+         * @param msg Mensaje ACL a verificar
+         * @return true si es un mensaje de turno, false en caso contrario
+         */
+        private boolean esMensajeTurnoDavid(ACLMessage msg) {
+            if (msg == null || msg.getContent() == null) {
+                return false;
+            }
+
+            String contenido = msg.getContent();
+            return contenido.equals(TipoMensaje.AITOR_TURNO_DAVID_JUGADORES.toString());
+        }
+
+        /**
+         * Verifica si el mensaje es de tipo DAVID_NUMERO_JUGADORES
+         * David envía los 6 números uno por uno
+         *
+         * @param msg Mensaje ACL a verificar
+         * @return true si es un mensaje con número, false en caso contrario
+         */
+        private boolean esMensajeNumero(ACLMessage msg) {
+            if (msg == null || msg.getContent() == null) {
+                return false;
+            }
+
+            String contenido = msg.getContent();
+            return contenido.startsWith(TipoMensaje.DAVID_NUMERO_JUGADORES.toString());
+        }
+
+        /**
+         * Verifica si el mensaje es de tipo DAVID_VALOR_BUSCADO_JUGADORES
+         * David envía el número objetivo a alcanzar
+         *
+         * @param msg Mensaje ACL a verificar
+         * @return true si es el mensaje del valor buscado, false en caso contrario
+         */
+        private boolean esMensajeValorBuscado(ACLMessage msg) {
+            if (msg == null || msg.getContent() == null) {
+                return false;
+            }
+
+            String contenido = msg.getContent();
+            return contenido.startsWith(TipoMensaje.DAVID_VALOR_BUSCADO_JUGADORES.toString());
+        }
+
+        /**
+         * Verifica si el mensaje es de tipo DAVID_EMPEZAR_CIFRAS_JUGADORES
+         * Indica que el jugador puede empezar a calcular su solución
+         *
+         * @param msg Mensaje ACL a verificar
+         * @return true si es mensaje de empezar, false en caso contrario
+         */
+        private boolean esMensajeEmpezar(ACLMessage msg) {
+            if (msg == null || msg.getContent() == null) {
+                return false;
+            }
+
+            String contenido = msg.getContent();
+            return contenido.equals(TipoMensaje.DAVID_EMPEZAR_CIFRAS_JUGADORES.toString());
+        }
+
+        /**
+         * Verifica si el mensaje es de tipo DAVID_FINALIZAR_CIFRAS_JUGADORES
+         * Indica que el tiempo ha terminado y no se aceptan más soluciones
+         *
+         * @param msg Mensaje ACL a verificar
+         * @return true si es mensaje de finalización, false en caso contrario
+         */
+        private boolean esMensajeFinalizar(ACLMessage msg) {
+            if (msg == null || msg.getContent() == null) {
+                return false;
+            }
+
+            String contenido = msg.getContent();
+            return contenido.equals(TipoMensaje.DAVID_FINALIZAR_CIFRAS_JUGADORES.toString());
+        }
+
+        /**
+         * Verifica si el mensaje es de tipo DAVID_GANADOR_JUGADORES_AITOR
+         * Anuncia al ganador o ganadores de la ronda
+         *
+         * @param msg Mensaje ACL a verificar
+         * @return true si es mensaje de ganador, false en caso contrario
+         */
+        private boolean esMensajeGanador(ACLMessage msg) {
+            if (msg == null || msg.getContent() == null) {
+                return false;
+            }
+
+            String contenido = msg.getContent();
+            return contenido.startsWith(TipoMensaje.DAVID_GANADOR_JUGADORES_AITOR.toString());
+        }
+
+        // ========== MÉTODOS AUXILIARES DE EXTRACCIÓN ==========
+
+        /**
+         * Extrae el valor numérico de un mensaje de tipo TIEMPO o NUMERO
+         * Formato esperado: "TIPO_MENSAJE:valor"
+         *
+         * @param msg Mensaje del que extraer el valor
+         * @return El valor numérico, o null si hay error
+         */
+        private Integer extraerValorNumerico(ACLMessage msg) {
+            if (msg == null || msg.getContent() == null) {
+                return null;
+            }
+
+            try {
+                String contenido = msg.getContent();
+                String[] partes = contenido.split(":", 2);
+
+                if (partes.length >= 2) {
+                    return Integer.parseInt(partes[1].trim());
+                }
+            } catch (NumberFormatException e) {
+                System.err.println("   ⚠ Error al extraer valor numérico: " + e.getMessage());
+            }
+
+            return null;
+        }
+
+        /**
+         * Extrae el nombre del ganador de un mensaje de tipo GANADOR
+         * Formato esperado: "DAVID_GANADOR_JUGADORES_AITOR:NombreGanador:Solución"
+         *
+         * @param msg Mensaje del que extraer el nombre
+         * @return Nombre del ganador, o null si hay error
+         */
+        private String extraerNombreGanador(ACLMessage msg) {
+            if (msg == null || msg.getContent() == null) {
+                return null;
+            }
+
+            try {
+                String contenido = msg.getContent();
+                String[] partes = contenido.split(":", 3);
+
+                if (partes.length >= 2) {
+                    return partes[1].trim();
+                }
+            } catch (Exception e) {
+                System.err.println("   ⚠ Error al extraer nombre ganador: " + e.getMessage());
+            }
+
+            return null;
+        }
+
+        /**
+         * Extrae la solución del ganador de un mensaje de tipo GANADOR
+         * Formato esperado: "DAVID_GANADOR_JUGADORES_AITOR:NombreGanador:Solución"
+         *
+         * @param msg Mensaje del que extraer la solución
+         * @return Solución como String, o null si hay error
+         */
+        private String extraerSolucionGanador(ACLMessage msg) {
+            if (msg == null || msg.getContent() == null) {
+                return null;
+            }
+
+            try {
+                String contenido = msg.getContent();
+                String[] partes = contenido.split(":", 3);
+
+                if (partes.length >= 3) {
+                    return partes[2].trim();
+                }
+            } catch (Exception e) {
+                System.err.println("   ⚠ Error al extraer solución: " + e.getMessage());
+            }
+
+            return null;
+        }
+
+        // ========== MÉTODO DE DEPURACIÓN (OPCIONAL) ==========
+
+        /**
+         * Método para depuración: imprime información detallada del mensaje
+         * USAR SOLO PARA DEBUGGING - Comentar en producción
+         *
+         * @param msg Mensaje a analizar
+         */
+        @SuppressWarnings("unused")
+        private void debugMensaje(ACLMessage msg) {
+            if (msg == null) {
+                System.out.println("[DEBUG] Mensaje null");
+                return;
+            }
+
+            System.out.println("[DEBUG " + myAgent.getLocalName() + "] Análisis de mensaje:");
+            System.out.println("   - Performative: " + ACLMessage.getPerformative(msg.getPerformative()));
+            System.out.println("   - Sender: " + (msg.getSender() != null ? msg.getSender().getLocalName() : "null"));
+            System.out.println("   - Content: " + msg.getContent());
+            System.out.println("   - ConversationId: " + msg.getConversationId());
+            System.out.println("   - Tipo detectado:");
+            System.out.println("      • esMensajeTiempo: " + esMensajeTiempo(msg));
+            System.out.println("      • esMensajeTurnoDavid: " + esMensajeTurnoDavid(msg));
+            System.out.println("      • esMensajeNumero: " + esMensajeNumero(msg));
+            System.out.println("      • esMensajeValorBuscado: " + esMensajeValorBuscado(msg));
+            System.out.println("      • esMensajeEmpezar: " + esMensajeEmpezar(msg));
+            System.out.println("      • esMensajeFinalizar: " + esMensajeFinalizar(msg));
+            System.out.println("      • esMensajeGanador: " + esMensajeGanador(msg));
+        }
+
+    } // Fin de ComportamientoRecibirMensajes
+
+    // ========== MÉTODO TAKEDOWN ==========
 
     @Override
     protected void takeDown() {
