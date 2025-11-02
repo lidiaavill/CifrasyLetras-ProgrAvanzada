@@ -53,7 +53,7 @@ public class AgenteExpertoDavid extends Agent {
     /**
      * Modo de depuración: si true, usa valores fijos; si false, genera aleatorios
      */
-    private boolean modoDepuracion = false;  // ⭐ Cambiar a false para aleatorios
+    private boolean modoDepuracion = true;  // ⭐ Cambiar a false para aleatorios
 
     @Override
     protected void setup() {
@@ -278,11 +278,15 @@ public class AgenteExpertoDavid extends Agent {
      */
     private void esperarFinRonda() {
         System.out.println("⏳ Esperando fin de ronda...");
+
+        long tiempoEspera = 5000; //para pruebas 5seg
+
         System.out.println("   Tiempo de ronda: " + (VariablesConfiguracion.tiempoRondaCifras / 1000) + " segundos");
 
         try {
             // Esperar el tiempo configurado (40000ms = 40 segundos)
-            Thread.sleep(VariablesConfiguracion.tiempoRondaCifras);
+            //Thread.sleep(VariablesConfiguracion.tiempoRondaCifras);
+            Thread.sleep(tiempoEspera);
 
             System.out.println("\n⏰ ¡Tiempo finalizado!");
 
@@ -347,66 +351,54 @@ public class AgenteExpertoDavid extends Agent {
         // Leer todos los mensajes de la cola hasta que no haya más
         while ((mensaje = receive()) != null) {
             mensajesLeidos++;
-
-            String contenido = mensaje.getContent();
-
-            // Verificar que es un mensaje de solución
-            if (contenido != null && contenido.startsWith(TipoMensaje.JUGADOR_SOLUCION_DAVID.toString())) {
-
                 // Extraer nombre del jugador (del sender)
-                String nombreJugador = mensaje.getSender().getLocalName();
+            String nombreJugador = mensaje.getSender().getLocalName();
 
-                System.out.println("   📥 Procesando solución de: " + nombreJugador);
+            System.out.println("   📥 Procesando solución de: " + nombreJugador);
 
-                try {
-                    // Deserializar la solución del contenido del mensaje
-                    Object obj = mensaje.getContentObject();
+            try {
+                // Deserializar la solución del contenido del mensaje
+                Object obj = mensaje.getContentObject();
 
-                    if (obj instanceof Solucion) {
-                        Solucion solucion = (Solucion) obj;
+                if (obj instanceof Solucion) {
+                    Solucion solucion = (Solucion) obj;
 
-                        // Validar la solución con AuxSolucion
-                        Integer resultadoObtenido = AuxSolucion.calcularSolucion(
+                    // Validar la solución con AuxSolucion
+                    Integer resultadoObtenido = AuxSolucion.calcularSolucion(
+                            solucion,
+                            numerosRonda,
+                            valorBuscado
+                    );
+
+                    if (resultadoObtenido != null) {
+                        // Solución válida
+                        SolucionJugador solucionJugador = new SolucionJugador(
+                                nombreJugador,
                                 solucion,
-                                numerosRonda,
-                                valorBuscado
-                        );
+                                resultadoObtenido
+                    );
 
-                        if (resultadoObtenido != null) {
-                            // Solución válida
-                            SolucionJugador solucionJugador = new SolucionJugador(
-                                    nombreJugador,
-                                    solucion,
-                                    resultadoObtenido
-                            );
+                        solucionesRecibidas.add(solucionJugador);
+                        solucionesValidas++;
 
-                            solucionesRecibidas.add(solucionJugador);
-                            solucionesValidas++;
-
-                            int distancia = Math.abs(valorBuscado - resultadoObtenido);
-                            System.out.println("      ✓ Válida - Resultado: " + resultadoObtenido +
-                                    " (distancia: " + distancia + ")");
-
-                        } else {
-                            // Solución inválida
-                            System.out.println("      ❌ Inválida - Operaciones incorrectas");
-                        }
+                        int distancia = Math.abs(valorBuscado - resultadoObtenido);
+                        System.out.println("      ✓ Válida - Resultado: " + resultadoObtenido +
+                                " (distancia: " + distancia + ")");
 
                     } else {
-                        System.out.println("      ⚠ Error: El objeto no es una Solución");
+                        // Solución inválida
+                         System.out.println("      ❌ Inválida - Operaciones incorrectas");
                     }
 
-                } catch (UnreadableException e) {
-                    System.err.println("      ❌ Error al deserializar solución: " + e.getMessage());
+                } else {
+                     System.out.println("      ⚠ Error: El objeto no es una Solución");
                 }
 
-            } else {
-                // Mensaje que no es de solución, lo ignoramos y descartamos
-                System.out.println("   🗑️  Mensaje ignorado (no es solución): " +
-                        (contenido != null ? contenido.substring(0, Math.min(30, contenido.length())) : "null"));
+            } catch (UnreadableException e) {
+                System.err.println("      ❌ Error al deserializar solución: " + e.getMessage());
             }
-        }
 
+        }
         System.out.println();
         System.out.println("   📊 Resumen:");
         System.out.println("      - Mensajes leídos: " + mensajesLeidos);
@@ -589,6 +581,13 @@ public class AgenteExpertoDavid extends Agent {
         //2. Obtener jugadores y Aitor
         AID [] jugadores = obtenerJugadores();
         AID aitor = obtenerAitor();
+
+        //Verificamos si hay jugadores
+        if(jugadores==null || jugadores.length==0){
+            System.out.println("⚠ No hay jugadores, enviando mensaje sin ganadores\n");
+            enviarMensajeSinGanadores(aitor, jugadores);
+            return;
+        }
 
         //3. Enviar nº a los jugadores
         enviarNumeros (jugadores);
