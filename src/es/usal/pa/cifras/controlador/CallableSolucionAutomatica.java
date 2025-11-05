@@ -89,19 +89,49 @@ public class CallableSolucionAutomatica implements Callable<Solucion> {
     /**
      * Prueba una operación específica y continúa la búsqueda recursivamente
      */
+    /**
+     * Prueba una operación específica y continúa la búsqueda recursivamente
+     */
     private void probarOperacion(List<Integer> numerosActuales, Solucion solucionActual,
                                  int idx1, int idx2, Integer num1, Integer num2, char operador) {
         if (interrumpido) return;
 
+        // ========== VALIDACIONES PREVIAS ==========
+
+        // 1. Evitar divisiones por cero
+        if (operador == '/' && num2 == 0) {
+            return;
+        }
+
+        // 2. Evitar divisiones no exactas (solo divisiones enteras permitidas)
+        if (operador == '/' && num1 % num2 != 0) {
+            return;
+        }
+
+        // 3. Evitar restas que den resultados negativos (opcional, depende de las reglas)
+        // Si las reglas del juego lo permiten, comenta estas líneas
+        if (operador == '-' && num1 < num2) {
+            return;
+        }
+
+        // Crear la operación
         Operacion op = new Operacion(num1, num2, operador);
         Integer resultado = AuxOperacion.calcularOperacion(op);
 
-        // Si la operación es válida
+        // Si la operación es válida (AuxOperacion ya valida divisiones exactas)
         if (resultado != null) {
             // Crear nueva lista de números (sin los usados, con el resultado)
             List<Integer> nuevosNumeros = new ArrayList<>(numerosActuales);
-            nuevosNumeros.remove(idx1);
-            nuevosNumeros.remove(idx2 > idx1 ? idx2 - 1 : idx2); // Ajustar índice
+
+            // IMPORTANTE: Remover en orden correcto para evitar problemas con índices
+            if (idx1 > idx2) {
+                nuevosNumeros.remove(idx1);
+                nuevosNumeros.remove(idx2);
+            } else {
+                nuevosNumeros.remove(idx2);
+                nuevosNumeros.remove(idx1);
+            }
+
             nuevosNumeros.add(resultado);
 
             // Crear nueva solución con esta operación
@@ -112,7 +142,6 @@ public class CallableSolucionAutomatica implements Callable<Solucion> {
             buscarSolucionRecursiva(nuevosNumeros, nuevaSolucion);
         }
     }
-
     /**
      * Evalúa si la solución actual es mejor que la mejor encontrada hasta ahora
      */
