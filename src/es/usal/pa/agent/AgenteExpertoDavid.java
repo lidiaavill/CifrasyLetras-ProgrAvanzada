@@ -57,23 +57,16 @@ public class AgenteExpertoDavid extends Agent {
 
     @Override
     protected void setup() {
-        System.out.println("╔═══════════════════════════════════╗");
-        System.out.println("║   Agente DAVID iniciado           ║");
-        System.out.println("║   Experto en Cifras               ║");
-        System.out.println("╚═══════════════════════════════════╝");
 
-        System.out.println("Mi nombre es: " + getAID().getName());
-        System.out.println();
+
+        //System.out.println("Mi nombre es: " + getAID().getName());
+       // System.out.println();
 
         // Inicializar variables de instancia
         numerosRonda = new ArrayList<>();
         valorBuscado = null;
         solucionesRecibidas = new ArrayList<>();
-        System.out.println("✓ Variables de instancia inicializadas:");
-        System.out.println("  - numerosRonda: " + numerosRonda);
-        System.out.println("  - valorBuscado: " + valorBuscado);
-        System.out.println("  - solucionesRecibidas: " + solucionesRecibidas);
-        System.out.println();
+
 
         // IMPORTANTE: Registrarse en el DF para que Aitor pueda encontrarnos
         registrarEnDF();
@@ -100,8 +93,6 @@ public class AgenteExpertoDavid extends Agent {
         try {
             // Registrar en el DF
             DFService.register(this, dfd);
-            System.out.println("✓ David registrado en el DF como 'ExpertoCifras'");
-            System.out.println();
         } catch (FIPAException e) {
             System.err.println("❌ Error al registrar a David en el DF:");
             e.printStackTrace();
@@ -164,7 +155,7 @@ public class AgenteExpertoDavid extends Agent {
      * @param jugadores Array con los AIDs de todos los jugadores
      */
     private void enviarNumeros(AID[] jugadores) {
-        System.out.println("📤 Enviando números a los jugadores...");
+        System.out.println("   📤 Os envio los números");
 
         // Verificar que hay jugadores
         if (jugadores == null || jugadores.length == 0) {
@@ -191,7 +182,7 @@ public class AgenteExpertoDavid extends Agent {
             // Enviar el mensaje
             send(mensaje);
 
-            System.out.println("   ✓ Número " + (i + 1) + "/6 enviado: " + numero);
+            //System.out.println("   ✓ Número " + (i + 1) + "/6 enviado: " + numero);
 
             // Esperar 100ms antes de enviar el siguiente
             try {
@@ -202,7 +193,6 @@ public class AgenteExpertoDavid extends Agent {
             }
         }
 
-        System.out.println("✓ Todos los números enviados\n");
     }
 
     /**
@@ -211,7 +201,6 @@ public class AgenteExpertoDavid extends Agent {
             * @param jugadores Array con los AIDs de todos los jugadores
  */
     private void enviarValorBuscado(AID[] jugadores) {
-        System.out.println("🎯 Enviando valor buscado a los jugadores...");
 
         // Verificar que hay jugadores
         if (jugadores == null || jugadores.length == 0) {
@@ -234,8 +223,6 @@ public class AgenteExpertoDavid extends Agent {
         // Enviar el mensaje
         send(mensaje);
 
-        System.out.println("   ✓ Valor buscado enviado: " + valorBuscado);
-        System.out.println();
     }
 
     /**
@@ -245,7 +232,7 @@ public class AgenteExpertoDavid extends Agent {
      * @param jugadores Array con los AIDs de todos los jugadores
      */
     private void enviarInicio(AID[] jugadores) {
-        System.out.println("🚀 Enviando mensaje de INICIO de ronda...");
+        System.out.println("\n   🚀 Enviando mensaje de INICIO de ronda...");
 
         // Verificar que hay jugadores
         if (jugadores == null || jugadores.length == 0) {
@@ -268,8 +255,8 @@ public class AgenteExpertoDavid extends Agent {
         // Enviar el mensaje
         send(mensaje);
 
-        System.out.println("   ✓ Mensaje de INICIO enviado");
-        System.out.println("   ⏱️  Los jugadores tienen 40 segundos para enviar soluciones\n");
+       // System.out.println("   ✓ Mensaje de INICIO enviado");
+        System.out.println("\n   ⏱️  Tenéis 40 segundos para enviar soluciones\n");
     }
 
     /**
@@ -279,7 +266,7 @@ public class AgenteExpertoDavid extends Agent {
     private void esperarFinRonda() {
         System.out.println("⏳ Esperando fin de ronda...");
 
-        long tiempoEspera = 5000; //para pruebas 5seg
+        long tiempoEspera = 400000; //para pruebas 5seg
 
         System.out.println("   Tiempo de ronda: " + (VariablesConfiguracion.tiempoRondaCifras / 1000) + " segundos");
 
@@ -531,12 +518,12 @@ public class AgenteExpertoDavid extends Agent {
      */
     private void generarProblema() {
         System.out.println("╔════════════════════════════════════════════╗");
-        System.out.println("║       🎲 GENERANDO NUEVO PROBLEMA         ║");
+        System.out.println("║       🎲 GENERANDO NUEVO PROBLEMA          ║");
         System.out.println("╚════════════════════════════════════════════╝");
 
         if (modoDepuracion) {
             // ========== MODO DEPURACIÓN: Valores fijos ==========
-            System.out.println("   Modo: DEPURACIÓN (valores fijos)");
+            //System.out.println("   Modo: DEPURACIÓN (valores fijos)");
 
             // Valores del ejemplo del enunciado
             numerosRonda = new ArrayList<>(Arrays.asList(25, 7, 4, 6, 4, 1));
@@ -544,7 +531,7 @@ public class AgenteExpertoDavid extends Agent {
 
         } else {
             // ========== MODO NORMAL: Valores aleatorios ==========
-            System.out.println("   Modo: NORMAL (valores aleatorios)");
+            //System.out.println("   Modo: NORMAL (valores aleatorios)");
 
             // Generar 6 números aleatorios
             numerosRonda = AuxProblema.calcularListaNumeros(6);
@@ -563,17 +550,12 @@ public class AgenteExpertoDavid extends Agent {
         System.out.println();
         System.out.println("   🎯 Valor buscado: " + valorBuscado);
         System.out.println();
-        System.out.println("   ✓ Lista de soluciones limpiada");
-        System.out.println("╚════════════════════════════════════════════╝\n");
     }
 
     /*
      * Simula una ronda con envío de ganadores para ver si funciona ComportamientoEsperaGanadores
      */
     private void procesarRondaYEnviarGanadores() {
-        System.out.println("═══════════════════════════════════");
-        System.out.println("🎲 DAVID procesando ronda...");
-        System.out.println("═══════════════════════════════════");
 
         //1. Generar nuevo problema
         generarProblema();
@@ -701,7 +683,7 @@ public class AgenteExpertoDavid extends Agent {
 
                 // Verificar si es el mensaje de turno de Aitor
                 if (contenido != null && contenido.equals(TipoMensaje.AITOR_TURNO_DAVID_JUGADORES.toString())) {
-                    System.out.println("✓ ¡Es mi turno! Comenzando ronda de cifras\n");
+                    System.out.println("Hola! Soy el experto David\n");
                     turnoRecibido = true;
 
                     procesarRondaYEnviarGanadores();

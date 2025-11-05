@@ -33,24 +33,26 @@ public class AgenteAitor extends Agent {
     @Override
 
     protected void setup() {
-        // Mensaje de bienvenida para saber que el agente se ha creado correctamente
+        /*Mensaje de bienvenida para saber que el agente se ha creado correctamente
         System.out.println("╔═══════════════════════════════════╗");
         System.out.println("║   Agente AITOR iniciado           ║");
         System.out.println("║  Presentador de Cifras y Letras   ║");
         System.out.println("╚═══════════════════════════════════╝");
 
+         */
+
         // Mostrar el nombre del agente
-        System.out.println("Mi nombre es: " + getAID().getName());
-        System.out.println("Estoy listo para comenzar el juego\n");
+        System.out.println("Mi nombre es Aitor");
+        System.out.println("¿Quién quiere jugar...?\n");
 
         // PRUEBA: Buscar jugadores conectados
-        System.out.println("Buscando jugadores conectados...");
+        //System.out.println("Buscando jugadores conectados...");
         AID[] jugadores = obtenerJugadores();
 
         if (jugadores != null && jugadores.length > 0) {
-            System.out.println("Se han encontrado " + jugadores.length + " jugador(es):");
+            System.out.println("Quieren jugar " + jugadores.length + " jugador(es):");
             for (int i = 0; i < jugadores.length; i++) {
-                System.out.println("   " + (i+1) + ". " + jugadores[i].getLocalName());
+                System.out.println("   " + (i + 1) + ". " + jugadores[i].getLocalName());
             }
         } else {
             System.out.println("⚠No se han encontrado jugadores conectados");
@@ -58,12 +60,12 @@ public class AgenteAitor extends Agent {
         System.out.println();
 
         //Buscamos al experto David
-        System.out.println("Buscando al experto David...");
+        // System.out.println("Buscando al experto David...");
         AID david = obtenerExpertoDavid();
 
-        if(david!=null)
-            System.out.println("Experto david encontrado: " + david.getLocalName());
-        else{
+
+
+    if (david == null){
             System.out.print("No se ha encontrado el experto David");
             System.err.println("El juego no puede continuar sin David");
             doDelete();
@@ -72,7 +74,7 @@ public class AgenteAitor extends Agent {
         System.out.println();
 
         //Behaviour de cuenta atrás
-        System.out.println("Iniciando cuenta atrás...\n");
+        System.out.println("Tienen 15s para prepararse\n");
         addBehaviour(new ComportamientoCuentaAtras());
     }
 
@@ -185,9 +187,12 @@ public class AgenteAitor extends Agent {
      * El mensaje indica que comienza la ronda de cifras
      */
     private void enviarMensajeTurno(){
+        /*
         System.out.println("═══════════════════════════════════");
         System.out.println("   Enviando mensaje de TURNO");
         System.out.println("═══════════════════════════════════");
+        */
+
         
         //1. Buscamos a David
         AID david = obtenerExpertoDavid();
@@ -246,30 +251,28 @@ public class AgenteAitor extends Agent {
         @Override
         public void action() {
             // 1. Enviar mensaje a jugadores con el tiempo actual
-            if (contador == 15) {
-                System.out.println("\n╔════════════════════════════════════╗");
-                System.out.println("║     ⏱️  CUENTA ATRÁS INICIADA     ║");
-                System.out.println("╚════════════════════════════════════╝\n");
-            }
             enviarMensajeJugadores(TipoMensaje.AITOR_TIEMPO_JUGADORES, String.valueOf(contador));
 
-            // 3. Si llegamos a 0, terminamos
+            /* 3. Si llegamos a 0, terminamos
+
             if (contador > 0) {
-                System.out.print("⏱️  " + String.format("%2d", contador) + " ");
+                //System.out.print("⏱️  " + String.format("%2d", contador) + " ");
                 if (contador % 5 == 0) {
-                    System.out.println(); // Salto de línea cada 5 números
+                    //System.out.println(); // Salto de línea cada 5 números
                 }
             } else {
-                System.out.println("\n⏱️  0️⃣  ¡TIEMPO!");
+                //System.out.println("\n⏱️  0️⃣  ¡TIEMPO!");
             }
+
+             */
 
             contador--;
 
             if (contador < 0) {
                 terminado = true;
                 System.out.println("\n╔════════════════════════════════════╗");
-                System.out.println("║  ✓ Cuenta atrás finalizada        ║");
-                System.out.println("║  🎮 Turno de David - Ronda Cifras ║");
+                System.out.println("║  ✓ Cuenta atrás finalizada         ║");
+                System.out.println("║        Turno de David              ║");
                 System.out.println("╚════════════════════════════════════╝\n");
 
                 // IMPORTANTE: Enviar mensaje de turno
@@ -299,7 +302,7 @@ public class AgenteAitor extends Agent {
          */
         @Override
         public int onEnd() {
-            System.out.println("Behaviour de cuenta atrás finalizado\n");
+            //System.out.println("Behaviour de cuenta atrás finalizado\n");
             return 0;
         }
 

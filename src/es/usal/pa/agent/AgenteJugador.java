@@ -66,9 +66,7 @@ public class AgenteJugador extends Agent {
 
     @Override
     protected void setup() {
-        System.out.println("╔═══════════════════════════════════╗");
-        System.out.println("║   Jugador " + getLocalName() + " conectado          ║");
-        System.out.println("╚═══════════════════════════════════╝");
+        //System.out.println("Jugador " + getLocalName() + "conectado");
 
         // Obtener argumentos (si se pasaron)
         Object[] args = getArguments();
@@ -79,8 +77,6 @@ public class AgenteJugador extends Agent {
             modoAutomatico = true;
         }
 
-        String modo = modoAutomatico ? "🤖 AUTOMÁTICO" : "📝 MANUAL (teclado)";
-        System.out.println("   Modo: " + modo);
 
         // Inicializar lista de números
         numerosRecibidos = new ArrayList<>();
@@ -91,7 +87,7 @@ public class AgenteJugador extends Agent {
         // Registrarse en el Directory Facilitator (DF) como "Jugador"
         registrarseEnDF();
 
-        System.out.println("Jugador " + getLocalName() + " listo para jugar\n");
+        //System.out.println("Jugador " + getLocalName() + " listo para jugar\n");
 
         // Añadir behaviour para recibir mensajes
         addBehaviour(new ComportamientoRecibirMensajes());
@@ -117,7 +113,7 @@ public class AgenteJugador extends Agent {
         try {
             // 3. Registrarme en el DF
             DFService.register(this, dfd);
-            System.out.println("✅ " + getLocalName() + " registrado en el DF como 'Jugador'");
+            //System.out.println("✅ " + getLocalName() + " registrado en el DF como 'Jugador'");
         } catch (FIPAException e) {
             System.err.println("❌ Error al registrarse en el DF:");
             e.printStackTrace();
@@ -231,7 +227,7 @@ public class AgenteJugador extends Agent {
          */
         private void procesarEstadoEsperandoCuentaAtras(ACLMessage mensaje) {
             if (esMensajeTiempo(mensaje)) {
-                System.out.println("   → [" + myAgent.getLocalName() + "] ¡Nueva ronda detectada!");
+               // System.out.println("   → [" + myAgent.getLocalName() + "] ¡Nueva ronda detectada!");
                 estado = EstadoJugador.EN_CUENTA_ATRAS;
                 procesarEstadoEnCuentaAtras(mensaje); // Procesar este mismo mensaje
             }
@@ -247,11 +243,11 @@ public class AgenteJugador extends Agent {
                 // Opcional: mostrar solo valores específicos
                 Integer tiempo = extraerValorNumerico(mensaje);
                 if (tiempo != null && tiempo <= 5) {
-                    System.out.println("   ⏱️ [" + myAgent.getLocalName() + "] " + tiempo + "...");
+                    //System.out.println("   ⏱️ [" + myAgent.getLocalName() + "] " + tiempo + "...");
                 }
 
             } else if (esMensajeTurnoDavid(mensaje)) {
-                System.out.println("   • [" + myAgent.getLocalName() + "] Preparado para jugar cifras");
+               // System.out.println("   • [" + myAgent.getLocalName() + "] Preparado para jugar cifras");
                 numerosRecibidos.clear();
                 valorBuscado = null;
                 estado = EstadoJugador.ESPERANDO_TURNO_CIFRAS;
@@ -264,7 +260,7 @@ public class AgenteJugador extends Agent {
         private void procesarEstadoEsperandoTurno(ACLMessage mensaje) {
             if (esMensajeNumero(mensaje)) {
                 estado = EstadoJugador.RECIBIENDO_NUMEROS;
-                System.out.println("   → [" + myAgent.getLocalName() + "] Recibiendo números...");
+                //System.out.println("   → [" + myAgent.getLocalName() + "] Recibiendo números...");
                 procesarEstadoRecibiendoNumeros(mensaje); // Procesar este número
             }
         }
@@ -278,12 +274,12 @@ public class AgenteJugador extends Agent {
 
                 if (numero != null) {
                     numerosRecibidos.add(numero);
-                    System.out.println("   📥 [" + myAgent.getLocalName() + "] Número " +
-                            numerosRecibidos.size() + "/6: " + numero);
+                    //System.out.println("   📥 [" + myAgent.getLocalName() + "] Número " +
+                           // numerosRecibidos.size() + "/6: " + numero);
 
                     if (numerosRecibidos.size() == 6) {
-                        System.out.println("   ✓ [" + myAgent.getLocalName() + "] Números completos: " +
-                                numerosRecibidos);
+                        //System.out.println("   ✓ [" + myAgent.getLocalName() + "] Números completos: " +
+                            //    numerosRecibidos);
                         estado = EstadoJugador.ESPERANDO_VALOR_BUSCADO;
                     }
                 } else {
@@ -300,7 +296,7 @@ public class AgenteJugador extends Agent {
                 valorBuscado = extraerValorNumerico(mensaje);
 
                 if (valorBuscado != null) {
-                    System.out.println("   🎯 [" + myAgent.getLocalName() + "] Objetivo: " + valorBuscado);
+                   // System.out.println("   🎯 [" + myAgent.getLocalName() + "] Objetivo: " + valorBuscado);
                     estado = EstadoJugador.ESPERANDO_INICIO;
                 } else {
                     System.err.println("   ⚠ [" + myAgent.getLocalName() +
@@ -313,10 +309,14 @@ public class AgenteJugador extends Agent {
          * Estado 6: Esperando mensaje de inicio de ronda
          */
         private void procesarEstadoEsperandoInicio(ACLMessage mensaje) {
+
             if (esMensajeEmpezar(mensaje)) {
+                 /*
                 System.out.println("\n   🚀 [" + myAgent.getLocalName() + "] ¡EMPIEZA LA RONDA!");
                 System.out.println("   📋 Números: " + numerosRecibidos);
                 System.out.println("   🎯 Objetivo: " + valorBuscado + "\n");
+
+             */
 
                 estado = EstadoJugador.JUGANDO;
                 generarYEnviarSolucion();
