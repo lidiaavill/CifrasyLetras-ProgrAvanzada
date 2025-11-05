@@ -114,12 +114,16 @@ public class CallableSolucionTeclado implements Callable<Solucion>
 				if(!listNumerosTemp.contains(operando1))
 				{
 					System.out.println("Operando "+operando1+" no existente");
-					continue;
+                    System.out.println("   Números disponibles: " + listNumerosTemp);
+
+                    continue;
 				}
 				else if(!listNumerosTemp.contains(operando2))
 				{
 					System.out.println("Operando "+operando2+" no existente");
-					continue;				
+                    System.out.println("   Números disponibles: " + listNumerosTemp);
+
+                    continue;
 				}
 				
 				operacionTemp=new Operacion(operando1, operando2, operador);

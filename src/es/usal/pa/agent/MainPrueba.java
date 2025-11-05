@@ -40,21 +40,21 @@ public class MainPrueba {
             AgentController jugador1 = cc.createNewAgent(
                     "Fran",                              // Nombre del jugador
                     "es.usal.pa.agent.AgenteJugador",   // Clase del agente
-                    null
+                    new Object [] {true} //AUTOMÁTICO
             );
             jugador1.start();
 
            AgentController jugador2 = cc.createNewAgent(
                     "Maria",
                     "es.usal.pa.agent.AgenteJugador",
-                    null
+                    new Object [] {true} //AUTOMÁTICO
             );
             jugador2.start();
 
             AgentController jugador3 = cc.createNewAgent(
                     "Carlos",
                     "es.usal.pa.agent.AgenteJugador",
-                    null
+                    new Object [] {true} //AUTOMÁTICO
             );
             jugador3.start();
 

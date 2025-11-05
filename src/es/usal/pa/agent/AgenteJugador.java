@@ -15,6 +15,15 @@ import es.usal.pa.cifras.modelo.Solucion;
 import java.util.List;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import es.usal.pa.cifras.controlador.CallableSolucionTeclado;
+import es.usal.pa.cifras.controlador.CallableSolucionAutomatica;
 
 /**
  * Agente Jugador - Participante del juego Cifras y Letras
@@ -33,6 +42,9 @@ public class AgenteJugador extends Agent {
 
     // Valor buscado de la ronda actual
     private Integer valorBuscado;
+
+    //Modo de juego: true=automática, false=manual (teclado)
+    private boolean modoAutomatico;
 
     /**
      * Enumeración de estados del jugador
@@ -57,6 +69,18 @@ public class AgenteJugador extends Agent {
         System.out.println("╔═══════════════════════════════════╗");
         System.out.println("║   Jugador " + getLocalName() + " conectado          ║");
         System.out.println("╚═══════════════════════════════════╝");
+
+        // Obtener argumentos (si se pasaron)
+        Object[] args = getArguments();
+        if (args != null && args.length > 0) {
+            modoAutomatico = (Boolean) args[0];
+        } else {
+            // Por defecto: modo automático
+            modoAutomatico = true;
+        }
+
+        String modo = modoAutomatico ? "🤖 AUTOMÁTICO" : "📝 MANUAL (teclado)";
+        System.out.println("   Modo: " + modo);
 
         // Inicializar lista de números
         numerosRecibidos = new ArrayList<>();
@@ -382,26 +406,114 @@ public class AgenteJugador extends Agent {
         private void generarYEnviarSolucion() {
             System.out.println("   💡 [" + myAgent.getLocalName() + "] Generando solución...");
 
-            // Creamos solución ficticia:
-            // Ejemplo del enunciado: 25+6=31, 7*4=28, 28*31=868, 868-1=867
-            Solucion solucion = new Solucion();
+            Solucion solucion = null;
 
-            // Operación 1: 25+6=31
-            solucion.addOpereacion(new Operacion(25, 6, '+'));
+            if (modoAutomatico) {
+                // ========== MODO AUTOMÁTICO ==========
+                solucion = generarSolucionAutomatica();
+            } else {
+                // ========== MODO MANUAL (TECLADO) ==========
+                solucion = generarSolucionTeclado();
+            }
 
-            // Operación 2: 7*4=28
-            solucion.addOpereacion(new Operacion(7, 4, '*'));
+            // Enviar solución si existe
+            if (solucion != null && !solucion.getListaOperacion().isEmpty()) {
+                enviarSolucion(solucion);
+            } else {
+                System.out.println("   ⚠ [" + myAgent.getLocalName() + "] No se envía solución (vacía o timeout)");
+            }
+        }
 
-            // Operación 3: 28*31=868
-            solucion.addOpereacion(new Operacion(28, 31, '*'));
+        /**
+         * Genera solución de forma automática usando búsqueda exhaustiva
+         */
+        private Solucion generarSolucionAutomatica() {
+            System.out.println("   🤖 [" + myAgent.getLocalName() + "] Modo AUTOMÁTICO activado");
 
-            // Operación 4: 868-1=867
-            solucion.addOpereacion(new Operacion(868, 1, '-'));
+            CallableSolucionAutomatica callable = new CallableSolucionAutomatica(
+                    numerosRecibidos,
+                    valorBuscado
+            );
 
-            System.out.println("   ✓ Solución generada: 25+6=31, 7*4=28, 28*31=868, 868-1=867");
+            FutureTask<Solucion> task = new FutureTask<>(callable);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(task);
 
-            // Enviar solución a David
-            enviarSolucion(solucion);
+            Solucion solucion = null;
+
+            try {
+                // Esperar máximo 38 segundos (dejamos margen antes de que David finalice)
+                solucion = task.get(38, TimeUnit.SECONDS);
+                System.out.println("   ✓ [" + myAgent.getLocalName() + "] Solución generada exitosamente");
+
+            } catch (TimeoutException e) {
+                System.out.println("   ⏱️  [" + myAgent.getLocalName() + "] Timeout - usando mejor solución encontrada");
+                task.cancel(true);
+                solucion = callable.getMejorSolucion();
+
+            } catch (InterruptedException | ExecutionException e) {
+                System.err.println("   ❌ [" + myAgent.getLocalName() + "] Error: " + e.getMessage());
+                task.cancel(true);
+            }
+
+            // Limpiar executor
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(500, TimeUnit.MILLISECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+            }
+
+            return solucion;
+        }
+
+        /**
+         * Genera solución mediante entrada por teclado
+         */
+        private Solucion generarSolucionTeclado() {
+            System.out.println("   📝 [" + myAgent.getLocalName() + "] Modo MANUAL activado");
+            System.out.println("   ⏱️  Tienes 40 segundos para introducir tu solución\n");
+
+            CallableSolucionTeclado callable = new CallableSolucionTeclado(
+                    numerosRecibidos,
+                    valorBuscado
+            );
+
+            FutureTask<Solucion> task = new FutureTask<>(callable);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(task);
+
+            Solucion solucion = null;
+
+            try {
+                // Esperar máximo 38 segundos
+                solucion = task.get(38, TimeUnit.SECONDS);
+                System.out.println("   ✓ [" + myAgent.getLocalName() + "] Solución registrada");
+
+            } catch (TimeoutException e) {
+                System.out.println("   ⏱️  [" + myAgent.getLocalName() + "] Tiempo agotado");
+                System.out.println("   ⚠ No se enviará solución incompleta");
+                task.cancel(true);
+                solucion = null; // No enviar solución parcial
+
+            } catch (InterruptedException | ExecutionException e) {
+                System.err.println("   ❌ [" + myAgent.getLocalName() + "] Error: " + e.getMessage());
+                task.cancel(true);
+            }
+
+            // Limpiar executor
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(500, TimeUnit.MILLISECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+            }
+
+            return solucion;
         }
 
         /**
