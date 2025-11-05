@@ -283,7 +283,11 @@ public class AgenteAitor extends Agent {
                 
             } else {
                 // 4. Esperar 1 segundo antes de la siguiente iteración
-                block(1000);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
 

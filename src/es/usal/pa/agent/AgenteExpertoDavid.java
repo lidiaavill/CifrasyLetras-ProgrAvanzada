@@ -266,14 +266,13 @@ public class AgenteExpertoDavid extends Agent {
     private void esperarFinRonda() {
         System.out.println("⏳ Esperando fin de ronda...");
 
-        long tiempoEspera = 400000; //para pruebas 5seg
 
         System.out.println("   Tiempo de ronda: " + (VariablesConfiguracion.tiempoRondaCifras / 1000) + " segundos");
 
         try {
             // Esperar el tiempo configurado (40000ms = 40 segundos)
             //Thread.sleep(VariablesConfiguracion.tiempoRondaCifras);
-            Thread.sleep(tiempoEspera);
+            Thread.sleep(VariablesConfiguracion.tiempoRondaCifras);
 
             System.out.println("\n⏰ ¡Tiempo finalizado!");
 
