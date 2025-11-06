@@ -22,8 +22,9 @@ import es.usal.pa.agent.modelo.VariablesConfiguracion;
  * - Esperar a que David comunique los ganadores
  * - Reiniciar el ciclo
  *
- * @author Lidia
+ * @author Lidia y Carolina
  */
+
 public class AgenteAitor extends Agent {
 
     /**
@@ -41,12 +42,10 @@ public class AgenteAitor extends Agent {
 
          */
 
-        // Mostrar el nombre del agente
         System.out.println("Mi nombre es Aitor");
         System.out.println("¿Quién quiere jugar...?\n");
 
-        // PRUEBA: Buscar jugadores conectados
-        //System.out.println("Buscando jugadores conectados...");
+
         AID[] jugadores = obtenerJugadores();
 
         if (jugadores != null && jugadores.length > 0) {
