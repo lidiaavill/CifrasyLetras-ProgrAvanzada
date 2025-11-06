@@ -73,9 +73,6 @@ public class AgenteJugador extends Agent {
             nivelJugador = asignarNivelAleatorio();
         }
 
-        // ← NUEVO: Mostrar nivel del jugador
-        System.out.println("🎮 Jugador " + getLocalName() + " - Nivel: " + nivelJugador);
-
         numerosRecibidos = new ArrayList<>();
         valorBuscado = null;
 
@@ -258,7 +255,7 @@ public class AgenteJugador extends Agent {
 
         private void procesarEstadoJugando(ACLMessage mensaje) {
             if (esMensajeFinalizar(mensaje)) {
-                System.out.println("   🏁 [" + myAgent.getLocalName() + "] Ronda finalizada");
+               // System.out.println("   🏁 [" + myAgent.getLocalName() + "] Ronda finalizada");
                 estado = EstadoJugador.ESPERANDO_FIN;
             }
         }
@@ -281,7 +278,7 @@ public class AgenteJugador extends Agent {
                 String nombreGanador = extraerNombreGanador(mensaje);
                 String solucion = extraerSolucionGanador(mensaje);
 
-                if (nombreGanador != null) {
+                /*if (nombreGanador != null) {
                     if (nombreGanador.equals(myAgent.getLocalName())) {
                         System.out.println("\n╔═══════════════════════════════════════════╗");
                         System.out.println("║   🏆 ¡HE GANADO ESTA RONDA! 🏆           ║");
@@ -298,7 +295,9 @@ public class AgenteJugador extends Agent {
                             System.out.println("      Solución: " + solucion);
                         }
                     }
-                }
+                }*/
+
+
             }
         }
 
@@ -319,7 +318,7 @@ public class AgenteJugador extends Agent {
         // ========== MÉTODO MODIFICADO: generarYEnviarSolucion ==========
 
         private void generarYEnviarSolucion() {
-            System.out.println("   💡 [" + myAgent.getLocalName() + "] Generando solución...");
+            //System.out.println("   💡 [" + myAgent.getLocalName() + "] Generando solución...");
 
             Solucion solucion = null;
 
@@ -342,13 +341,12 @@ public class AgenteJugador extends Agent {
          * Genera solución de forma automática usando el nivel del jugador
          */
         private Solucion generarSolucionAutomatica() {
-            System.out.println("   🤖 [" + myAgent.getLocalName() + "] Modo AUTOMÁTICO - Nivel: " + nivelJugador);
 
             // ← CAMBIO: Usar constructor con nivel
             CallableSolucionAutomatica callable = new CallableSolucionAutomatica(
                     numerosRecibidos,
                     valorBuscado,
-                    nivelJugador  // ← PASAR EL NIVEL DEL JUGADOR
+                    nivelJugador
             );
 
             FutureTask<Solucion> task = new FutureTask<>(callable);
@@ -359,10 +357,10 @@ public class AgenteJugador extends Agent {
 
             try {
                 solucion = task.get(38, TimeUnit.SECONDS);
-                System.out.println("   ✓ [" + myAgent.getLocalName() + "] Solución generada exitosamente");
+               // System.out.println("   ✓ [" + myAgent.getLocalName() + "] Solución generada exitosamente");
 
             } catch (TimeoutException e) {
-                System.out.println("   ⏱️  [" + myAgent.getLocalName() + "] Timeout - usando mejor solución encontrada");
+               // System.out.println("   ⏱️  [" + myAgent.getLocalName() + "] Timeout - usando mejor solución encontrada");
                 task.cancel(true);
                 solucion = callable.getMejorSolucion();
 
@@ -384,8 +382,7 @@ public class AgenteJugador extends Agent {
         }
 
         private Solucion generarSolucionTeclado() {
-            System.out.println("   📝 [" + myAgent.getLocalName() + "] Modo MANUAL activado");
-            System.out.println("   ⏱️  Tienes 40 segundos para introducir tu solución\n");
+           // System.out.println("   ⏱️  Tienes 40 segundos para introducir tu solución\n");
 
             CallableSolucionTeclado callable = new CallableSolucionTeclado(
                     numerosRecibidos,
@@ -403,7 +400,7 @@ public class AgenteJugador extends Agent {
                 System.out.println("   ✓ [" + myAgent.getLocalName() + "] Solución registrada");
 
             } catch (TimeoutException e) {
-                System.out.println("   ⏱️  [" + myAgent.getLocalName() + "] Tiempo agotado");
+               // System.out.println("   ⏱️  [" + myAgent.getLocalName() + "] Tiempo agotado");
                 System.out.println("   ⚠ No se enviará solución incompleta");
                 task.cancel(true);
                 solucion = null;

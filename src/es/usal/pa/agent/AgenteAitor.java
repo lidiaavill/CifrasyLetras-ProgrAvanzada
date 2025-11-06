@@ -187,13 +187,7 @@ public class AgenteAitor extends Agent {
      * El mensaje indica que comienza la ronda de cifras
      */
     private void enviarMensajeTurno(){
-        /*
-        System.out.println("═══════════════════════════════════");
-        System.out.println("   Enviando mensaje de TURNO");
-        System.out.println("═══════════════════════════════════");
-        */
 
-        
         //1. Buscamos a David
         AID david = obtenerExpertoDavid();
         if(david==null){

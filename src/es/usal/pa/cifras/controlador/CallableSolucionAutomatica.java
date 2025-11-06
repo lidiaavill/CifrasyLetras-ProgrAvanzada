@@ -113,7 +113,7 @@ public class CallableSolucionAutomatica implements Callable<Solucion> {
 
     @Override
     public Solucion call() throws Exception {
-        System.out.println("   🤖 [Nivel: " + nivel + "] Buscando solución...");
+        //System.out.println("   🤖 [Nivel: " + nivel + "] Buscando solución...");
         long tiempoInicio = System.currentTimeMillis();
 
         // Iniciar búsqueda según el nivel

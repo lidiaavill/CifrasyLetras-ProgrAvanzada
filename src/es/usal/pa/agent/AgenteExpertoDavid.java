@@ -264,7 +264,7 @@ public class AgenteExpertoDavid extends Agent {
      * Durante este tiempo, los jugadores calculan y envían sus soluciones.
      */
     private void esperarFinRonda() {
-        System.out.println("⏳ Esperando fin de ronda...");
+       // System.out.println("⏳ Esperando fin de ronda...");
 
 
         System.out.println("   Tiempo de ronda: " + (VariablesConfiguracion.tiempoRondaCifras / 1000) + " segundos");
@@ -290,7 +290,7 @@ public class AgenteExpertoDavid extends Agent {
      * @param jugadores Array con los AIDs de todos los jugadores
      */
     private void enviarFinalizacion(AID[] jugadores) {
-        System.out.println("🏁 Enviando mensaje de FINALIZACIÓN...");
+        //System.out.println("🏁 Enviando mensaje de FINALIZACIÓN...");
 
         // Verificar que hay jugadores
         if (jugadores == null || jugadores.length == 0) {
@@ -340,7 +340,7 @@ public class AgenteExpertoDavid extends Agent {
                 // Extraer nombre del jugador (del sender)
             String nombreJugador = mensaje.getSender().getLocalName();
 
-            System.out.println("   📥 Procesando solución de: " + nombreJugador);
+            //System.out.println("   📥 Procesando solución de: " + nombreJugador);
 
             try {
                 // Deserializar la solución del contenido del mensaje
@@ -623,7 +623,7 @@ public class AgenteExpertoDavid extends Agent {
 
         // Imprimir resultado
         System.out.println("\n╔═══════════════════════════════════════════════╗");
-        System.out.println("║          🏆 RESULTADO DE LA RONDA 🏆          ║");
+        System.out.println("║          🏆 RESULTADO DE LA RONDA 🏆         ║");
         System.out.println("╠═══════════════════════════════════════════════╣");
         System.out.println("║  Ganador: " + String.format("%-35s", ganador.getLocalName()) + "║");
         System.out.println("║  Solución: " + String.format("%-34s",
@@ -706,8 +706,8 @@ public class AgenteExpertoDavid extends Agent {
 
         @Override
         public int onEnd() {
-            System.out.println("🔄 Behaviour EsperarTurno finalizado");
-            System.out.println("   Añadiendo nuevo behaviour para esperar siguiente turno...\n");
+           // System.out.println("🔄 Behaviour EsperarTurno finalizado");
+            //System.out.println("   Añadiendo nuevo behaviour para esperar siguiente turno...\n");
 
             // IMPORTANTE: Añadir de nuevo este behaviour para la siguiente ronda
             myAgent.addBehaviour(new ComportamientoEsperarTurno());
