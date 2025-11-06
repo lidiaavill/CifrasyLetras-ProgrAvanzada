@@ -6,12 +6,12 @@ import jade.core.ProfileImpl;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
+import es.usal.pa.cifras.controlador.CallableSolucionAutomatica.NivelJugador; // ← NUEVO IMPORT
 
 /**
- * Clase Main para probar el sistema de agentes
- * Crea: Jugadores → Aitor (que los buscará)
+ * Clase Main para probar el sistema con jugadores de diferentes niveles
  *
- * @author Lidia
+ * @author Lidia & Carolina
  */
 public class MainPrueba {
 
@@ -22,59 +22,120 @@ public class MainPrueba {
         System.out.println("║    Carolina De Jesús y Lidia Villarreal    ║");
         System.out.println("╚════════════════════════════════════════════╝\n");
 
-        // 1. Obtener la instancia del Runtime de JADE
         Runtime rt = Runtime.instance();
-
-        // 2. Crear el perfil de configuración
         Profile p = new ProfileImpl();
-        p.setParameter(Profile.MAIN_HOST, "localhost");  // Ejecutar en local
-        p.setParameter(Profile.GUI, "true");             // Activar GUI (interfaz gráfica)
+        p.setParameter(Profile.MAIN_HOST, "localhost");
+        p.setParameter(Profile.GUI, "true");
 
-        // 3. Crear el contenedor principal
         ContainerController cc = rt.createMainContainer(p);
 
         try {
 
+            // ========== OPCIÓN 1: NIVELES ESPECÍFICOS (RECOMENDADO) ==========
 
-            // 4. Crear varios jugadores
+            System.out.println("🎮 Creando jugadores con niveles específicos...\n");
+
+            // Jugador EXPERTO
             AgentController jugador1 = cc.createNewAgent(
-                    "Fran",                              // Nombre del jugador
-                    "es.usal.pa.agent.AgenteJugador",   // Clase del agente
-                    new Object [] {false} //AUTOMÁTICO
+                    "Fran",
+                    "es.usal.pa.agent.AgenteJugador",
+                    new Object[] {true, NivelJugador.EXPERTO}  // Automático + Nivel
             );
             jugador1.start();
 
-           AgentController jugador2 = cc.createNewAgent(
+            // Jugador INTERMEDIO
+            AgentController jugador2 = cc.createNewAgent(
                     "Maria",
                     "es.usal.pa.agent.AgenteJugador",
-                    new Object [] {true} //AUTOMÁTICO
+                    new Object[] {true, NivelJugador.INTERMEDIO}
+            );
+            jugador2.start();
+
+            // Jugador PRINCIPIANTE
+            AgentController jugador3 = cc.createNewAgent(
+                    "Carlos",
+                    "es.usal.pa.agent.AgenteJugador",
+                    new Object[] {true, NivelJugador.PRINCIPIANTE}
+            );
+            jugador3.start();
+
+            // Jugador ALEATORIO (comportamiento impredecible)
+            AgentController jugador4 = cc.createNewAgent(
+                    "Ana",
+                    "es.usal.pa.agent.AgenteJugador",
+                    new Object[] {true, NivelJugador.ALEATORIO}
+            );
+            jugador4.start();
+
+
+            // ========== OPCIÓN 2: NIVELES ALEATORIOS ==========
+            // Si prefieres que cada jugador tenga nivel aleatorio automáticamente:
+            /*
+            System.out.println("🎲 Creando jugadores con niveles aleatorios...\n");
+
+            AgentController jugador1 = cc.createNewAgent(
+                    "Fran",
+                    "es.usal.pa.agent.AgenteJugador",
+                    new Object[] {true}  // Solo modo automático, nivel se asigna al azar
+            );
+            jugador1.start();
+
+            AgentController jugador2 = cc.createNewAgent(
+                    "Maria",
+                    "es.usal.pa.agent.AgenteJugador",
+                    new Object[] {true}
             );
             jugador2.start();
 
             AgentController jugador3 = cc.createNewAgent(
                     "Carlos",
                     "es.usal.pa.agent.AgenteJugador",
-                    new Object [] {true} //AUTOMÁTICO
+                    new Object[] {true}
             );
             jugador3.start();
+            */
 
 
-            // 5. IMPORTANTE: Esperar un poco para que los jugadores se registren en el DF
-            Thread.sleep(1000);  // 1 segundo
+            // ========== OPCIÓN 3: MIX DE NIVELES ESPECÍFICOS Y ALEATORIOS ==========
+            /*
+            // Algunos con nivel fijo, otros aleatorios
+            AgentController jugador1 = cc.createNewAgent(
+                    "Fran",
+                    "es.usal.pa.agent.AgenteJugador",
+                    new Object[] {true, NivelJugador.EXPERTO}  // Fijo: Experto
+            );
+            jugador1.start();
 
+            AgentController jugador2 = cc.createNewAgent(
+                    "Maria",
+                    "es.usal.pa.agent.AgenteJugador",
+                    new Object[] {true}  // Aleatorio
+            );
+            jugador2.start();
 
+            AgentController jugador3 = cc.createNewAgent(
+                    "Carlos",
+                    "es.usal.pa.agent.AgenteJugador",
+                    new Object[] {true}  // Aleatorio
+            );
+            jugador3.start();
+            */
 
+            // Esperar para que los jugadores se registren en el DF
+            Thread.sleep(1000);
+
+            // Crear el Experto David
             AgentController david = cc.createNewAgent(
-                            "ExpertoDavid", 
-                            "es.usal.pa.agent.AgenteExpertoDavid", 
-                            null);
+                    "ExpertoDavid",
+                    "es.usal.pa.agent.AgenteExpertoDavid",
+                    null
+            );
             david.start();
 
-            //Esperamos a que David se registre en el DF
-            Thread.sleep(1500);  // 1.5 segundos (más tiempo para David)
+            // Esperar a que David se registre
+            Thread.sleep(1500);
 
-
-            // 6. Crear el agente Aitor (que buscará a los jugadores)
+            // Crear al presentador Aitor
             AgentController aitor = cc.createNewAgent(
                     "Aitor",
                     "es.usal.pa.agent.AgenteAitor",
@@ -82,19 +143,17 @@ public class MainPrueba {
             );
             aitor.start();
 
-            /*Resumen final
+            // Resumen final
             System.out.println("\n╔════════════════════════════════════════════╗");
             System.out.println("║  ✅ Sistema iniciado correctamente         ║");
             System.out.println("║                                            ║");
-            System.out.println("║  Agentes:                                  ║");
-            System.out.println("║   • 3 Jugadores (Fran, Maria, Carlos)      ║");
+            System.out.println("║  Agentes creados:                          ║");
+            System.out.println("║   • 4 Jugadores (niveles variados)         ║");
             System.out.println("║   • 1 Experto (David)                      ║");
             System.out.println("║   • 1 Presentador (Aitor)                  ║");
             System.out.println("║                                            ║");
+            System.out.println("║  🎯 Los niveles se mostrarán al iniciar    ║");
             System.out.println("╚════════════════════════════════════════════╝\n");
-
-             */
-
 
         } catch (StaleProxyException e) {
             System.err.println("❌ Error al crear los agentes:");
