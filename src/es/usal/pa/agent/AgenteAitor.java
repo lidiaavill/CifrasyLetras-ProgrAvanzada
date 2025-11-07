@@ -96,14 +96,15 @@ public class AgenteAitor extends Agent {
         sc.setMaxResults(Long.MAX_VALUE);  // Sin límite de resultados
 
         try {
-            // 3. Realizar la búsqueda en el DF (Directory Facilitator)
+            // 3. Realizar la búsqueda en el DF
+            //this - Aitor realiza la búsqueda, template - plantilla, sc - restricciones
             DFAgentDescription[] results = DFService.search(this, template, sc);
 
             // 4. Extraer los AID de los resultados
             if (results != null && results.length > 0) {
-                AID[] jugadores = new AID[results.length];
+                AID[] jugadores = new AID[results.length]; //Creamos array vacio del mismo tamaño que results
                 for (int i = 0; i < results.length; i++) {
-                    jugadores[i] = results[i].getName();
+                    jugadores[i] = results[i].getName(); //Extaemos solo el nombre
                 }
                 return jugadores;
             }
@@ -122,7 +123,7 @@ public class AgenteAitor extends Agent {
      * Busca al agente que proporciona el servicio ExpertoCifras
      * @return AID del experto david o null si no se encuentra
      */
-    @SuppressWarnings("removal")
+
     private AID obtenerExpertoDavid(){
         //1.Crear la plantilla de busqueda 
         DFAgentDescription template = new DFAgentDescription();
@@ -294,7 +295,7 @@ public class AgenteAitor extends Agent {
         }
 
         /**
-         * Método onEnd() - Se ejecuta cuando el behaviour termina (opcional)
+         * Método onEnd() - Se ejecuta cuando el behaviour termina
          * @return Código de terminación (0 = OK)
          */
         @Override
@@ -306,6 +307,7 @@ public class AgenteAitor extends Agent {
         /*
          * CLASE INTERNA: Behaviour para esperar ganadores de David
          */
+        //Usamos CyclicBehaviour porque el método se ejecutado infinitamente, done () (heredado) siempre devuelve false
         private class ComportamientoEsperaGanadores extends CyclicBehaviour{
             private boolean ganadorRecibido = false;
             private long tiempoUltimoMensaje = 0;
@@ -316,7 +318,7 @@ public class AgenteAitor extends Agent {
                                     MessageTemplate.MatchPerformative(ACLMessage.INFORM), 
                                     MessageTemplate.MatchConversationId("cifras-letras"));
                 
-                ACLMessage mensaje = myAgent.receive(template);
+                ACLMessage mensaje = myAgent.receive(template); //leer mensaje que coincida con el filtro
 
                 if(mensaje != null){
                     String contenido = mensaje.getContent();
@@ -324,6 +326,8 @@ public class AgenteAitor extends Agent {
                     //Verificar si es un mensaje de ganador
                     if (contenido.contains(TipoMensaje.DAVID_GANADOR_JUGADORES_AITOR.toString())) {
                         ganadorRecibido = true;
+                        //Cada vez que llega un mensaje de ganador, reseteamos el temporizador tiemout,
+                        //así aseguramos que los 2s de espera cuentan siempre desde el último mensaje recibido y no desde el primero
                         tiempoUltimoMensaje = System.currentTimeMillis();
                     }
                 } else {
@@ -345,7 +349,9 @@ public class AgenteAitor extends Agent {
                             myAgent.removeBehaviour(this);
                         }
                     }
-                    block(500);
+                    //Sin block, el behaviour ejecutaría action () miles de veces por segundo, consumiendo CPU incesariamente
+                    block(500); //Reduce carga de CPU mientras espera mensajes
+
                 }       
             }
         }
@@ -353,7 +359,7 @@ public class AgenteAitor extends Agent {
 
     /**
      * Método takeDown() - Se ejecuta cuando el agente se destruye
-     * Es como la "muerte" del agente (opcional pero buena práctica)
+     * Es como la "muerte" del agente
      */
     @Override
     protected void takeDown() {

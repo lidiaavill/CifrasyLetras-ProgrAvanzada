@@ -30,39 +30,19 @@ import es.usal.pa.agent.modelo.TipoMensaje;
  */
 public class AgenteExpertoDavid extends Agent {
 
-    // ========== VARIABLES DE INSTANCIA ==========
-
-    /**
-     * Lista de 6 números que se usarán en la ronda actual
-     * Ejemplo: [25, 7, 4, 6, 4, 1]
-     */
     private List<Integer> numerosRonda;
-
-    /**
-     * Número objetivo que los jugadores deben alcanzar
-     * Ejemplo: 866
-     */
     private Integer valorBuscado;
+    private List<SolucionJugador> solucionesRecibidas; //Lista de soluciones recibidas de los jugadores durante la ronda actual
+                                                       //Se limpia al inicio de cada nueva ronda
 
-    /**
-     * Lista de soluciones recibidas de los jugadores durante la ronda actual
-     * Se limpia al inicio de cada nueva ronda
-     */
-    private List<SolucionJugador> solucionesRecibidas;
-
-    /**
-     * Modo de depuración: si true, usa valores fijos; si false, genera aleatorios
-     */
-    private boolean modoDepuracion = false;  // ⭐ Cambiar a false para aleatorios
+    private boolean modoDepuracion = false;  // true=valores fijos; false=genera aleatorios
 
     @Override
     protected void setup() {
 
-
         //System.out.println("Mi nombre es: " + getAID().getName());
        // System.out.println();
 
-        // Inicializar variables de instancia
         numerosRonda = new ArrayList<>();
         valorBuscado = null;
         solucionesRecibidas = new ArrayList<>();

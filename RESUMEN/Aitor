@@ -1,0 +1,63 @@
+╔══════════════════════════════════════════════════════════════╗
+║                         AITOR                                ║
+╚══════════════════════════════════════════════════════════════╝
+
+1️⃣  ROL: Presentador y coordinador del juego
+
+2️⃣  INICIO: Busca jugadores y David en el DF
+
+3️⃣  BEHAVIOUR 1: Cuenta atrás (15→0) usando Behaviour
+    → Termina automáticamente cuando done()=true
+
+4️⃣  BEHAVIOUR 2: Espera ganadores usando CyclicBehaviour
+    → Termina manualmente con timeout de 2s
+
+5️⃣  CICLO: Se repite infinitamente alternando behaviours
+
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                    AGENTE AITOR                           ┃
+┃                  (Presentador del Juego)                  ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                            │
+                            ▼
+              ┌─────────────────────────┐
+              │   setup() - NACIMIENTO  │
+              │   (Se ejecuta 1 vez)    │
+              └────────────┬────────────┘
+                           │
+         ┌─────────────────┼─────────────────┐
+         ▼                 ▼                 ▼
+    ┌─────────┐    ┌──────────────┐   ┌──────────┐
+    │Buscar   │    │Buscar        │   │Verificar │
+    │Jugadores│    │ExpertoDavid  │   │que existe│
+    │en el DF │    │en el DF      │   │David     │
+    └────┬────┘    └──────┬───────┘   └────┬─────┘
+         │                │                 │
+         └────────────────┴─────────────────┘
+                          │
+                          ▼
+         ┌────────────────────────────────────┐
+         │  addBehaviour(                     │
+         │    ComportamientoCuentaAtras       │
+         │  )                                 │
+         └────────────┬───────────────────────┘
+                      │
+                      ▼
+        ╔═════════════════════════════════════╗
+        ║     CICLO INFINITO DEL JUEGO        ║
+        ║  (Se repite ronda tras ronda)       ║
+        ╚═════════════════════════════════════╝
+                      │
+         ┌────────────┴────────────┐
+         │                         │
+         ▼                         ▼
+┌─────────────────┐      ┌──────────────────────┐
+│ Behaviour 1:    │      │ Behaviour 2:         │
+│ CuentaAtras     │─────→│ EsperaGanadores      │
+│ (15 → 0)        │      │ (Timeout 2s)         │
+└─────────────────┘      └──────────┬───────────┘
+         ▲                           │
+         └───────────────────────────┘
+              (Reinicia el ciclo)
