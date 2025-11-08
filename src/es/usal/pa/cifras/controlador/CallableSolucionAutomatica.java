@@ -16,7 +16,6 @@ import es.usal.pa.cifras.modelo.Solucion;
  */
 public class CallableSolucionAutomatica implements Callable<Solucion> {
 
-    // ========== ENUMERACIÓN DE NIVEL ==========
     public enum NivelJugador {
         EXPERTO,      // Encuentra solución óptima (o muy cercana)
         INTERMEDIO,   // Encuentra soluciones aceptables
@@ -24,12 +23,12 @@ public class CallableSolucionAutomatica implements Callable<Solucion> {
         ALEATORIO     // Comportamiento impredecible
     }
 
-    // ========== ATRIBUTOS ==========
     private List<Integer> numerosDisponibles;
     private Integer valorBuscado;
     private Solucion mejorSolucion;
     private int mejorDistancia;
-    private volatile boolean interrumpido = false;
+    private volatile boolean interrumpido = false; //Volatile garantiza que todos los hilos vean el valor actualizado
+
     private NivelJugador nivel;
     private Random random;
 
@@ -39,12 +38,12 @@ public class CallableSolucionAutomatica implements Callable<Solucion> {
     private int maxIntentos;           // Intentos máximos de búsqueda
     private long tiempoMaximoBusqueda; // Tiempo máximo en milisegundos
 
+
     // ========== CONSTRUCTORES ==========
 
-    /**
-     * Constructor con nivel específico
-     */
-    public CallableSolucionAutomatica(List<Integer> numeros, Integer objetivo, NivelJugador nivel) {
+
+     //Constructor con nivel específico
+     public CallableSolucionAutomatica(List<Integer> numeros, Integer objetivo, NivelJugador nivel) {
         this.numerosDisponibles = new ArrayList<>(numeros);
         this.valorBuscado = objetivo;
         this.mejorSolucion = new Solucion();
@@ -55,19 +54,13 @@ public class CallableSolucionAutomatica implements Callable<Solucion> {
         configurarNivel();
     }
 
-    /**
-     * Constructor que elige nivel aleatorio
-     */
+
+    //Constructor que elige nivel aleatorio
+    //Constructor sobrecargado con delegación
     public CallableSolucionAutomatica(List<Integer> numeros, Integer objetivo) {
         this(numeros, objetivo, elegirNivelAleatorio());
     }
 
-    /**
-     * Constructor original (comportamiento EXPERTO por defecto)
-     */
-    public CallableSolucionAutomatica(List<Integer> numeros, Integer objetivo, boolean legacy) {
-        this(numeros, objetivo, NivelJugador.EXPERTO);
-    }
 
     // ========== CONFIGURACIÓN POR NIVEL ==========
 
@@ -144,21 +137,27 @@ public class CallableSolucionAutomatica implements Callable<Solucion> {
     // ========== BÚSQUEDA ÓPTIMA (EXPERTO) ==========
 
     private void buscarSolucionRecursivaOptima(List<Integer> numerosActuales, Solucion solucionActual, int profundidad) {
-        if (Thread.currentThread().isInterrupted() || interrumpido) {
+        //Condición de parada: timeout o interrupción
+         if (Thread.currentThread().isInterrupted() || interrumpido) {
             interrumpido = true;
             return;
         }
 
+         //Condición de parada: alcanzamos profundidadMaxima
         if (profundidad >= maxProfundidad) {
             return;
         }
 
+        //¿Esta solución es mejor que la que teníamos?
         evaluarSolucion(numerosActuales, solucionActual);
 
+        //Condición de parada: No hay suficientes nº para operar
         if (numerosActuales.size() < 2) {
             return;
         }
 
+        //Recursión: probar todas las combinaciones de 2 numeros con todos los operadores
+        //Algoritmo exponencial O (6^n)
         for (int i = 0; i < numerosActuales.size(); i++) {
             for (int j = i + 1; j < numerosActuales.size(); j++) {
                 Integer num1 = numerosActuales.get(i);
@@ -186,7 +185,7 @@ public class CallableSolucionAutomatica implements Callable<Solucion> {
                 break;
             }
 
-            // Generar una solución aleatoria con poda
+            // Generar una solución aleatoria (con heuristica)
             Solucion solucionPrueba = generarSolucionAleatoria();
 
             if (solucionPrueba != null) {
@@ -333,15 +332,16 @@ public class CallableSolucionAutomatica implements Callable<Solucion> {
 
     private void probarOperacion(List<Integer> numerosActuales, Solucion solucionActual,
                                  int idx1, int idx2, Integer num1, Integer num2, char operador, int profundidad) {
-        if (interrumpido) return;
+        if (interrumpido) return; //Verificar timeout
 
-        if (operador == '/' && num2 == 0) return;
-        if (operador == '/' && num1 % num2 != 0) return;
-        if (operador == '-' && num1 < num2) return;
+        if (operador == '/' && num2 == 0) return; //No dividir por 0
+        if (operador == '/' && num1 % num2 != 0) return; //Solo divisiones exactas
+        if (operador == '-' && num1 < num2) return; //Evitar negativos
 
         Operacion op = new Operacion(num1, num2, operador);
         Integer resultado = AuxOperacion.calcularOperacion(op);
 
+        //Si operción válida
         if (resultado != null) {
             List<Integer> nuevosNumeros = new ArrayList<>(numerosActuales);
 
@@ -363,15 +363,18 @@ public class CallableSolucionAutomatica implements Callable<Solucion> {
     }
 
     private void evaluarSolucion(List<Integer> numerosActuales, Solucion solucion) {
-        for (Integer num : numerosActuales) {
+        for (Integer num : numerosActuales) { //Revisar numeros disponibles
             int distancia = Math.abs(valorBuscado - num);
 
+            //¿Es mejor que la actual?
+            //0 si la distancia es igual, ¿tiene menos operaciones?
             if (distancia < mejorDistancia ||
                     (distancia == mejorDistancia && solucion.getListaOperacion().size() < mejorSolucion.getListaOperacion().size())) {
 
                 mejorDistancia = distancia;
                 mejorSolucion = solucion.clone();
 
+                //Si encontramos numero exacto paramos
                 if (distancia == 0) {
                     interrumpido = true;
                     return;

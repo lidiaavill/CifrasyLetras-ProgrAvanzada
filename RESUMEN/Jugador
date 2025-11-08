@@ -1,0 +1,41 @@
+╔══════════════════════════════════════════════════════════════╗
+║                        JUGADOR                               ║
+╚══════════════════════════════════════════════════════════════╝
+
+1️⃣  ROL: Participante que calcula soluciones
+
+2️⃣  INICIO: Registrarse en el DF como "Jugador"
+    • Modo: automático o teclado
+    • Nivel: EXPERTO, INTERMEDIO, PRINCIPIANTE, ALEATORIO
+
+3️⃣  BEHAVIOUR: Recibir mensajes usando CyclicBehaviour
+    → Máquina de estados que procesa diferentes tipos de mensajes
+
+4️⃣  ESTADOS (máquina de estados):
+    1. ESPERANDO_CUENTA_ATRAS
+    2. EN_CUENTA_ATRAS (recibe 15→0)
+    3. ESPERANDO_TURNO_CIFRAS
+    4. RECIBIENDO_NUMEROS (recibe 6 números)
+    5. ESPERANDO_VALOR_BUSCADO
+    6. ESPERANDO_INICIO
+    7. JUGANDO (genera y envía solución)
+    8. ESPERANDO_FIN
+    9. RECIBIENDO_GANADORES
+
+5️⃣  GENERACIÓN DE SOLUCIÓN:
+    • Modo automático: CallableSolucionAutomatica
+      - Según nivel: diferentes estrategias y tiempos
+      - Timeout: 38 segundos
+    • Modo teclado: CallableSolucionTeclado
+      - Lee operaciones del usuario
+      - Timeout: 38 segundos
+
+6️⃣  ENVÍO: Serializa objeto Solucion y envía a David
+
+7️⃣  LIMPIEZA: Al recibir nueva cuenta atrás, borra todos los
+    mensajes antiguos de la cola para empezar limpio
+
+8️⃣  VARIABLES CLAVE:
+    • numerosRecibidos: List<Integer>
+    • valorBuscado: Integer
+    • estado: EstadoJugador (enum)

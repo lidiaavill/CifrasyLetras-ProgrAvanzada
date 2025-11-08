@@ -66,7 +66,7 @@ public class AgenteExpertoDavid extends Agent {
 
         // Crear descripción del servicio
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("ExpertoCifras");  // ⭐ IMPORTANTE: Mismo tipo que busca Aitor
+        sd.setType("ExpertoCifras");  // Mismo tipo que busca Aitor
         sd.setName("David");
         dfd.addServices(sd);
 
@@ -91,16 +91,18 @@ public class AgenteExpertoDavid extends Agent {
         try{
             DFAgentDescription[] results = DFService.search(this, template);
             if(results !=null && results.length>0)
-                return results[0].getName();
+                return results[0].getName(); //Devuelve AID de Aitor
         }catch (FIPAException e){
             e.printStackTrace();
         }
-        return new AID("Aitor", AID.ISLOCALNAME);
+        return new AID("Aitor", AID.ISLOCALNAME); // Si no encuentra a Aitor: Crea un AID "a mano" asumiendo que
+                                                        // Aitor se llama "Aitor" y está en el mismo contenedor local.
+
     }
 
-    /*
-     * Obtenemos los jugadores del DF
-     */
+
+    // Obtenemos los jugadores del DF
+
     private AID[] obtenerJugadores(){
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
@@ -114,7 +116,7 @@ public class AgenteExpertoDavid extends Agent {
             DFAgentDescription[] results = DFService.search(this, template, sc);
 
             if(results!=null && results.length>0){
-                AID[] jugadores = new AID[results.length];
+                AID[] jugadores = new AID[results.length]; //Creamos array vacio del mismo tamaño que results
                 for(int i=0; i< results.length;i++)
                     jugadores[i] = results[i].getName();
                 return jugadores;
@@ -251,7 +253,6 @@ public class AgenteExpertoDavid extends Agent {
 
         try {
             // Esperar el tiempo configurado (40000ms = 40 segundos)
-            //Thread.sleep(VariablesConfiguracion.tiempoRondaCifras);
             Thread.sleep(VariablesConfiguracion.tiempoRondaCifras);
 
             System.out.println("\n⏰ ¡Tiempo finalizado!");
@@ -259,16 +260,15 @@ public class AgenteExpertoDavid extends Agent {
         } catch (InterruptedException e) {
             System.err.println("⚠ Error: La espera fue interrumpida");
             e.printStackTrace();
-            Thread.currentThread().interrupt(); // Restaurar el estado de interrupción
+            Thread.currentThread().interrupt(); // Restaurar el estado de interrupción si es interrumpido
         }
     }
 
     /**
      * Envía el mensaje de finalización de la ronda a todos los jugadores.
-     * Indica que el tiempo ha terminado y no se aceptan más soluciones.
-     *
-     * @param jugadores Array con los AIDs de todos los jugadores
+     * Indica que el tiempo ha terminado y no se aceptan más    soluciones
      */
+
     private void enviarFinalizacion(AID[] jugadores) {
         //System.out.println("🏁 Enviando mensaje de FINALIZACIÓN...");
 
@@ -302,8 +302,9 @@ public class AgenteExpertoDavid extends Agent {
      * Procesa la cola de mensajes, valida cada solución y las almacena.
      *
      * Solo considera mensajes de tipo JUGADOR_SOLUCION_DAVID.
-     * Los demás mensajes se descartan.
+     * Los demás mensajes se descartan
      */
+
     private void leerSoluciones() {
         System.out.println("📨 Leyendo soluciones de los jugadores...");
 
@@ -326,8 +327,8 @@ public class AgenteExpertoDavid extends Agent {
                 // Deserializar la solución del contenido del mensaje
                 Object obj = mensaje.getContentObject();
 
-                if (obj instanceof Solucion) {
-                    Solucion solucion = (Solucion) obj;
+                if (obj instanceof Solucion) { //Devuelve true si object se puede convertir a una solucion
+                    Solucion solucion = (Solucion) obj; //Convierte object genérico en un solucion
 
                     // Validar la solución con AuxSolucion
                     Integer resultadoObtenido = AuxSolucion.calcularSolucion(
@@ -376,10 +377,10 @@ public class AgenteExpertoDavid extends Agent {
 
     /**
      * Calcula los ganadores de la ronda.
-     * Encuentra el/los jugador(es) con el resultado más cercano al valor buscado.
-     *
+     * Encuentra el/los jugador(es) con el resultado más cercano al valor buscado
      * @return Lista con los ganadores (puede haber empates)
      */
+
     private List<SolucionJugador> calcularGanadores() {
         System.out.println("🏆 Calculando ganadores...");
 
@@ -406,6 +407,7 @@ public class AgenteExpertoDavid extends Agent {
 
         // Encontrar todos los jugadores con esa distancia mínima (pueden haber empates)
         for (SolucionJugador solucion : solucionesRecibidas) {
+            //TipoElemento   variable: coleccion
             int distancia = solucion.calcularDistancia(valorBuscado);
 
             if (distancia == distanciaMinima) {
@@ -434,6 +436,7 @@ public class AgenteExpertoDavid extends Agent {
      *
      * @param ganadores Lista con los ganadores de la ronda
      */
+
     private void enviarGanadores(List<SolucionJugador> ganadores) {
         System.out.println("📢 Enviando mensajes de ganadores...");
 
@@ -454,8 +457,8 @@ public class AgenteExpertoDavid extends Agent {
             for (SolucionJugador ganador : ganadores) {
                 // Convertir la solución a string legible
                 String solucionTexto = AuxSolucion.cadenaOperaciones(ganador.getSolucion())
-                        .replace("\n", ", ")
-                        .trim();
+                        .replace("\n", ", ") //Reemplaza todos los saltos de línea (\n) por comas y espacios (, )
+                        .trim(); //Elimina los espacios en blanco (y saltos de línea) al principio y al final del String.
 
                 // Si el texto es muy largo, truncar
                 if (solucionTexto.length() > 100) {
@@ -495,6 +498,7 @@ public class AgenteExpertoDavid extends Agent {
      * - modoDepuracion = true  → Valores fijos (25, 7, 4, 6, 4, 1) y 866
      * - modoDepuracion = false → Valores aleatorios
      */
+
     private void generarProblema() {
         System.out.println("╔════════════════════════════════════════════╗");
         System.out.println("║       🎲 GENERANDO NUEVO PROBLEMA          ║");
@@ -502,15 +506,12 @@ public class AgenteExpertoDavid extends Agent {
 
         if (modoDepuracion) {
             // ========== MODO DEPURACIÓN: Valores fijos ==========
-            //System.out.println("   Modo: DEPURACIÓN (valores fijos)");
-
             // Valores del ejemplo del enunciado
             numerosRonda = new ArrayList<>(Arrays.asList(25, 7, 4, 6, 4, 1));
             valorBuscado = 866;
 
         } else {
             // ========== MODO NORMAL: Valores aleatorios ==========
-            //System.out.println("   Modo: NORMAL (valores aleatorios)");
 
             // Generar 6 números aleatorios
             numerosRonda = AuxProblema.calcularListaNumeros(6);
@@ -531,9 +532,7 @@ public class AgenteExpertoDavid extends Agent {
         System.out.println();
     }
 
-    /*
-     * Simula una ronda con envío de ganadores para ver si funciona ComportamientoEsperaGanadores
-     */
+
     private void procesarRondaYEnviarGanadores() {
 
         //1. Generar nuevo problema
@@ -578,10 +577,9 @@ public class AgenteExpertoDavid extends Agent {
 
     }
 
-    /*
-     * Enviar mensaje de ganador a jugadores y Aitor
-     */
-    private void enviarMensajeGanador (AID ganador, String solucion, AID aitor, AID[] jugadores){
+
+    // Enviar mensaje de ganador a jugadores y Aitor
+     private void enviarMensajeGanador (AID ganador, String solucion, AID aitor, AID[] jugadores){
         ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
 
         //añadimos a aitor como destinatario
@@ -593,7 +591,6 @@ public class AgenteExpertoDavid extends Agent {
                 mensaje.addReceiver(jugador);
         }
 
-        // Formato: DAVID_GANADOR_JUGADORES_AITOR:NombreGanador:Solución
         String contenido = TipoMensaje.DAVID_GANADOR_JUGADORES_AITOR.toString() +
                 ":" + ganador.getLocalName() +
                 ":" + solucion;
@@ -611,9 +608,7 @@ public class AgenteExpertoDavid extends Agent {
         System.out.println("╚═══════════════════════════════════════════════╝\n");
     }
 
-    /*
-     * Envia mensaje cuando no hay ganadores
-     */
+
     private void enviarMensajeSinGanadores(AID aitor, AID[] jugadores){
         ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
 
@@ -639,6 +634,7 @@ public class AgenteExpertoDavid extends Agent {
      * Este behaviour se queda esperando a recibir el mensaje AITOR_TURNO_DAVID_JUGADORES
      * Cuando lo recibe, marca turnoRecibido=true y termina
      */
+
     private class ComportamientoEsperarTurno extends Behaviour {
 
         // Variable para saber si hemos recibido el turno
@@ -662,7 +658,6 @@ public class AgenteExpertoDavid extends Agent {
 
                 // Verificar si es el mensaje de turno de Aitor
                 if (contenido != null && contenido.equals(TipoMensaje.AITOR_TURNO_DAVID_JUGADORES.toString())) {
-                    System.out.println("Hola! Soy el experto David\n");
                     turnoRecibido = true;
 
                     procesarRondaYEnviarGanadores();
@@ -686,10 +681,6 @@ public class AgenteExpertoDavid extends Agent {
 
         @Override
         public int onEnd() {
-           // System.out.println("🔄 Behaviour EsperarTurno finalizado");
-            //System.out.println("   Añadiendo nuevo behaviour para esperar siguiente turno...\n");
-
-            // IMPORTANTE: Añadir de nuevo este behaviour para la siguiente ronda
             myAgent.addBehaviour(new ComportamientoEsperarTurno());
 
             return 0;

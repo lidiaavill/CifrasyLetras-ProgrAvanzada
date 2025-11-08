@@ -31,10 +31,6 @@ public class MainPrueba {
 
         try {
 
-            // ==========NIVELES ESPECÍFICOS==========
-
-
-
             // Jugador EXPERTO
             AgentController jugador1 = cc.createNewAgent(
                     "Fran",

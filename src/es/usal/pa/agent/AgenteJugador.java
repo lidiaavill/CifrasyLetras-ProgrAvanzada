@@ -34,12 +34,10 @@ import es.usal.pa.cifras.controlador.CallableSolucionAutomatica.NivelJugador; //
  */
 public class AgenteJugador extends Agent {
 
-    // ========== VARIABLES DE INSTANCIA ==========
-
     private List<Integer> numerosRecibidos;
     private Integer valorBuscado;
     private boolean modoAutomatico;
-    private NivelJugador nivelJugador; // ← NUEVO CAMPO
+    private NivelJugador nivelJugador;
 
     private enum EstadoJugador {
         ESPERANDO_CUENTA_ATRAS,
@@ -53,16 +51,15 @@ public class AgenteJugador extends Agent {
         RECIBIENDO_GANADORES
     }
 
-    // ========== MÉTODO SETUP (MODIFICADO) ==========
 
     @Override
     protected void setup() {
         Object[] args = getArguments();
 
         if (args != null && args.length > 0) {
-            modoAutomatico = (Boolean) args[0];
+            modoAutomatico = (Boolean) args[0]; //Extraemos primer argumento y convierte a Boolean
 
-            // ← NUEVO: Obtener nivel si se pasa como segundo argumento
+            // Obtener nivel si se pasa como segundo argumento
             if (args.length > 1 && args[1] instanceof NivelJugador) {
                 nivelJugador = (NivelJugador) args[1];
             } else {
@@ -80,12 +77,12 @@ public class AgenteJugador extends Agent {
         addBehaviour(new ComportamientoRecibirMensajes());
     }
 
-    // ========== NUEVO MÉTODO: Asignar nivel aleatorio ==========
 
     /**
      * Asigna un nivel aleatorio al jugador con probabilidades ponderadas
      * 20% Experto, 40% Intermedio, 30% Principiante, 10% Aleatorio
      */
+
     private NivelJugador asignarNivelAleatorio() {
         double rand = Math.random();
 
@@ -100,7 +97,6 @@ public class AgenteJugador extends Agent {
         }
     }
 
-    // ========== MÉTODOS SIN CAMBIOS ==========
 
     private void registrarseEnDF() {
         DFAgentDescription dfd = new DFAgentDescription();
@@ -335,21 +331,20 @@ public class AgenteJugador extends Agent {
             }
         }
 
-        // ========== MÉTODO MODIFICADO: generarSolucionAutomatica ==========
 
-        /**
-         * Genera solución de forma automática usando el nivel del jugador
-         */
+        //Genera solución de forma automática usando el nivel del jugador
+
         private Solucion generarSolucionAutomatica() {
 
-            // ← CAMBIO: Usar constructor con nivel
             CallableSolucionAutomatica callable = new CallableSolucionAutomatica(
                     numerosRecibidos,
                     valorBuscado,
                     nivelJugador
             );
-
+            //FutureTask es un objecto que envuelve un Callable y permite ejecutarlo en un hilo separado,
+            // esperar su resultado con timeout y cancelarlo si tarda demasiado
             FutureTask<Solucion> task = new FutureTask<>(callable);
+            //ExecutorService es un gestor de hilos que se encarga de crear hilos, ejecutar tareas en ellos y gestionar su cliclo de vida
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(task);
 

@@ -1,0 +1,67 @@
+╔══════════════════════════════════════════════════════════════╗
+║                      EXPERT DAVID                            ║
+╚══════════════════════════════════════════════════════════════╝
+
+1️⃣  ROL: Juez y gestor de las rondas de cifras
+
+2️⃣  INICIO: Registrarse en el DF como "ExpertoCifras"
+
+3️⃣  BEHAVIOUR: Esperar turno usando CyclicBehaviour
+    → Escucha infinitamente mensajes AITOR_TURNO
+    → Se reinicia automáticamente tras cada ronda
+
+4️⃣  RONDA (al recibir turno):
+    1. Generar problema (6 números + objetivo)
+    2. Enviar números a jugadores (uno a uno, 100ms delay)
+    3. Enviar valor buscado
+    4. Enviar inicio
+    5. Esperar 40 segundos (Thread.sleep)
+    6. Enviar finalización
+    7. Leer soluciones de la cola
+    8. Calcular ganador(es)
+    9. Enviar ganadores a Aitor y jugadores
+
+5️⃣  VARIABLES CLAVE:
+    • numerosRonda: List<Integer> (los 6 números)
+    • valorBuscado: Integer (objetivo)
+    • solucionesRecibidas: List<SolucionJugador>
+
+6️⃣  VALIDACIÓN: Usa AuxSolucion.calcularSolucion() para verificar
+    que las operaciones son correctas y usan números válidos
+
+7️⃣  COMUNICACIÓN: Crea AIDs a partir de nombres String para enviar
+    mensajes de ganadores
+
+
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                  AGENTE EXPERT DAVID                       ┃
+┃              (Experto en Cifras - Juez)                    ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                            │
+                            ▼
+              ┌─────────────────────────┐
+              │   setup() - NACIMIENTO  │
+              │   (Se ejecuta 1 vez)    │
+              └────────────┬────────────┘
+                           │
+         ┌─────────────────┼─────────────────┐
+         ▼                 ▼                 ▼
+    ┌─────────┐    ┌──────────────┐   ┌──────────┐
+    │Inicializ│    │Registrarse   │   │Añadir    │
+    │Variables│    │en el DF como │   │Behaviour │
+    │         │    │"ExpertoCifras"│   │          │
+    └─────────┘    └──────────────┘   └────┬─────┘
+                                            │
+                                            ▼
+                              ┌──────────────────────┐
+                              │ComportamientoEsperar │
+                              │Turno (CyclicBehaviour)│
+                              └──────────┬───────────┘
+                                         │
+                                         ▼
+                        ╔═════════════════════════════════╗
+                        ║  CICLO INFINITO: GESTIONAR      ║
+                        ║  RONDAS DE CIFRAS               ║
+                        ╚═════════════════════════════════╝
