@@ -163,8 +163,6 @@ public class CallableSolucionTeclado implements Callable<Solucion>
 	
 	public static void main(String args[]) throws Exception
 	{
-		//https://unpocodejava.com/2010/08/02/threads-devolver-valores-desde-un-hilo/
-		//CallableSolucionTeclado callableSolucionTeclado=new CallableSolucionTeclado(Arrays.asList(1, 2, 3, 4, 5, 5), 20);
 		CallableSolucionTeclado callableSolucionTeclado=new CallableSolucionTeclado(Arrays.asList(2, 20, 2, 1, 9, 10), 589);
 		FutureTask<Solucion> task = new FutureTask<Solucion> (callableSolucionTeclado);
 		ExecutorService executorService = Executors.newSingleThreadExecutor ();
@@ -190,12 +188,6 @@ public class CallableSolucionTeclado implements Callable<Solucion>
 			e.printStackTrace();
 		} catch (TimeoutException e)
 		{
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			
-			//https://www.geekyhacker.com/callable-with-the-timeout-in-java-executorservice/
-			//añadir comprobación en el hilo para salirse
-			//if(Thread.currentThread().isInterrupted()) return;
 			task.cancel(true);
 		}
 		
