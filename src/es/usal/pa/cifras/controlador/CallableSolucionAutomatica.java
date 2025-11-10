@@ -127,8 +127,8 @@ public class CallableSolucionAutomatica implements Callable<Solucion> {
             System.out.println("      ⚠ No se encontró ninguna solución");
         } else {
             Integer resultado = calcularResultadoFinal(mejorSolucion, numerosDisponibles);
-            System.out.println("      Resultado: " + resultado + " (distancia: " + mejorDistancia + ")");
-            System.out.println("      Operaciones: " + mejorSolucion.getListaOperacion().size());
+            //System.out.println("      Resultado: " + resultado + " (distancia: " + mejorDistancia + ")");
+            //System.out.println("      Operaciones: " + mejorSolucion.getListaOperacion().size());
         }
 
         return mejorSolucion;

@@ -315,8 +315,18 @@ public class AgenteExpertoDavid extends Agent {
         int mensajesLeidos = 0;
         int solucionesValidas = 0;
 
+        long tiempoInicio=System.currentTimeMillis();
+        long TIMEOUT_LECTURA=2000;
+
         // Leer todos los mensajes de la cola hasta que no haya más
         while ((mensaje = receive()) != null) {
+            
+            //Para evitar que procese mensajes antiguos
+            if(System.currentTimeMillis()-tiempoInicio > TIMEOUT_LECTURA){
+                System.out.println("   ⏱️  Timeout de lectura alcanzado");
+                break;
+            }
+
             mensajesLeidos++;
                 // Extraer nombre del jugador (del sender)
             String nombreJugador = mensaje.getSender().getLocalName();
@@ -348,17 +358,17 @@ public class AgenteExpertoDavid extends Agent {
                         solucionesRecibidas.add(solucionJugador);
                         solucionesValidas++;
 
-                        int distancia = Math.abs(valorBuscado - resultadoObtenido);
-                        System.out.println("      ✓ Válida - Resultado: " + resultadoObtenido +
-                                " (distancia: " + distancia + ")");
+                        //int distancia = Math.abs(valorBuscado - resultadoObtenido);
+                        //System.out.println("      ✓ Válida - Resultado: " + resultadoObtenido +
+                        //        " (distancia: " + distancia + ")");
 
                     } else {
                         // Solución inválida
-                         System.out.println("      ❌ Inválida - Operaciones incorrectas");
+                        System.out.println("      ❌ Inválida - Operaciones incorrectas");
                     }
 
                 } else {
-                     System.out.println("      ⚠ Error: El objeto no es una Solución");
+                    System.out.println("      ⚠ Error: El objeto no es una Solución");
                 }
 
             } catch (UnreadableException e) {

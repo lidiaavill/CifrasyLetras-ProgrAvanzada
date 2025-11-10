@@ -138,6 +138,7 @@ public class AgenteJugador extends Agent {
     private class ComportamientoRecibirMensajes extends CyclicBehaviour {
 
         private EstadoJugador estado = EstadoJugador.ESPERANDO_CUENTA_ATRAS;
+        private boolean solucionEnviada = false;
 
         @Override
         public void action() {
@@ -190,6 +191,13 @@ public class AgenteJugador extends Agent {
             if (esMensajeTiempo(mensaje)) {
                 estado = EstadoJugador.EN_CUENTA_ATRAS;
                 procesarEstadoEnCuentaAtras(mensaje);
+            }
+            //Para evitar que un jugador se conecte en mitad de ronda
+            else if (esMensajeTurnoDavid(mensaje)){
+                System.out.println("   ⚠ [" + myAgent.getLocalName() + "] Conectado a mitad de ronda, esperando siguiente...");
+            } 
+            else if (esMensajeNumero(mensaje) || esMensajeValorBuscado(mensaje) || esMensajeEmpezar(mensaje)){
+                //Esperar a la siguiente ronda
             }
         }
 
@@ -245,6 +253,7 @@ public class AgenteJugador extends Agent {
         private void procesarEstadoEsperandoInicio(ACLMessage mensaje) {
             if (esMensajeEmpezar(mensaje)) {
                 estado = EstadoJugador.JUGANDO;
+                solucionEnviada=false;
                 generarYEnviarSolucion();
             }
         }
@@ -418,7 +427,39 @@ public class AgenteJugador extends Agent {
         }
 
         private void enviarSolucion(Solucion solucion) {
+            
+            //Verificar que no se haya enviado ya solucion
+            if(solucionEnviada){
+                System.out.println("   ⚠ [" + myAgent.getLocalName() + "] Ya se envió una solución para esta ronda");
+                return;
+            }
+
             try {
+
+                //Validamos solucion antes de enviar
+                if(!validarSolucion(solucion)){
+                    System.out.println("   ⚠ [" + myAgent.getLocalName() + "] Solución inválida (números no permitidos)");
+                    return;
+                }
+
+                //Calculamos el resultado y lo mostramos
+                Integer resultadoObtenido = es.usal.pa.cifras.controlador.AuxSolucion.calcularSolucion(solucion, numerosRecibidos, valorBuscado);
+
+                if(resultadoObtenido != null){
+                    int distancia = Math.abs(valorBuscado-resultadoObtenido);
+                    int numOperaciones = solucion.getListaOperacion().size();
+
+                     // IMPRIMIR TODO DE UNA VEZ
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("   ✓ [").append(myAgent.getLocalName()).append("] Solución enviada a David\n");
+                    sb.append("      Resultado: ").append(resultadoObtenido).append(" (distancia: ").append(distancia).append(")\n");
+                    sb.append("      Operaciones: ").append(numOperaciones).append("\n");
+                    
+                    System.out.print(sb.toString());
+                } else{
+                    System.out.println("   ⚠ [" + myAgent.getLocalName() + "] Solución inválida (no se enviará)");
+                    return;
+                }
                 AID david = obtenerExpertoDavid();
 
                 ACLMessage mensaje = new ACLMessage(ACLMessage.INFORM);
@@ -428,11 +469,20 @@ public class AgenteJugador extends Agent {
 
                 myAgent.send(mensaje);
 
-                System.out.println("   📤 [" + myAgent.getLocalName() + "] Solución enviada a David\n");
+                
             } catch(IOException e) {
                 System.err.println("   ❌ Error al enviar solución: " + e.getMessage());
                 e.printStackTrace();
             }
+        }
+
+        //Metodo de validacion
+        private boolean validarSolucion(Solucion solucion){
+            if(solucion==null || solucion.getListaOperacion().isEmpty())
+                return false;
+            if(solucion.getListaOperacion().size()>numerosRecibidos.size())
+                return false;
+            return true;
         }
 
         // ========== MÉTODOS DE VERIFICACIÓN (SIN CAMBIOS) ==========
